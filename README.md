@@ -1,7 +1,6 @@
-- 👋 Hi, I’m @maxnkosi
+- 👋 Hi, I’m Max
 - 👀 I’m interested in Art, Design & Tech
 - 🌱 I’m currently learning Web Development
-- 💞️ I’m looking to collaborate on Case Studies and side projects
 - 📫 maxnkosi28@gmail.com
 
 <!---
