@@ -98,6 +98,58 @@ export function useHomepageMotion(root: Ref<HTMLElement | null>) {
       })
 
       /* ---------------------------------------------------------------
+         Specialist rail — drag to scroll
+         --------------------------------------------------------------- */
+      const rail = q('[data-rail]')[0]
+      if (rail) {
+        let down = false
+        let moved = false
+        let startX = 0
+        let startScroll = 0
+
+        const onDown = (e: PointerEvent) => {
+          down = true
+          moved = false
+          startX = e.clientX
+          startScroll = rail.scrollLeft
+        }
+        const onMove = (e: PointerEvent) => {
+          if (!down) return
+          const dx = e.clientX - startX
+          if (!moved && Math.abs(dx) > 4) {
+            moved = true
+            rail.classList.add('is-dragging')
+          }
+          if (moved) {
+            e.preventDefault()
+            rail.scrollLeft = startScroll - dx * 1.2
+          }
+        }
+        const endDrag = () => {
+          down = false
+          rail.classList.remove('is-dragging')
+        }
+        /* A drag must not fire the click on whatever sat under the cursor. */
+        const onClick = (e: MouseEvent) => {
+          if (moved) { e.preventDefault(); e.stopPropagation() }
+        }
+
+        rail.addEventListener('pointerdown', onDown)
+        rail.addEventListener('pointermove', onMove)
+        rail.addEventListener('click', onClick, true)
+        window.addEventListener('pointerup', endDrag)
+        window.addEventListener('pointercancel', endDrag)
+
+        self.add(() => {
+          rail.removeEventListener('pointerdown', onDown)
+          rail.removeEventListener('pointermove', onMove)
+          rail.removeEventListener('click', onClick, true)
+          window.removeEventListener('pointerup', endDrag)
+          window.removeEventListener('pointercancel', endDrag)
+        })
+      }
+
+      /* ---------------------------------------------------------------
          Header — scrim solidifies, then retracts on downward scroll
          --------------------------------------------------------------- */
       const nav = q('[data-nav]')[0]
@@ -157,7 +209,7 @@ export function useHomepageMotion(root: Ref<HTMLElement | null>) {
       })
 
       /* Below the pin breakpoint the counter follows native scroll instead. */
-      mm.add(`(not ${PIN_QUERY})`, () => {
+      mm.add(`(not (${PIN_QUERY}))`, () => {
         const track = q('[data-services-track]')[0]
         if (!track) return
         const onScroll = () => {

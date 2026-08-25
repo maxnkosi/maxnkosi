@@ -123,14 +123,17 @@ button { font-family: inherit; }
    Reveal on scroll
    -------------------------------------------------------------------------- */
 
-[data-reveal] {
+/* Guarded behind .js (set by an inline script in <head>) so that if the
+   bundle fails to load or throws, the content stays visible rather than
+   leaving the page blank. */
+.js [data-reveal] {
   opacity: 0;
   transform: translateY(var(--rv-y));
   transition:
     opacity var(--rv-dur) var(--ease) var(--rv-delay),
     transform var(--rv-dur) var(--ease) var(--rv-delay);
 }
-[data-reveal].is-in { opacity: 1; transform: translateY(0); }
+.js [data-reveal].is-in { opacity: 1; transform: translateY(0); }
 
 /* --------------------------------------------------------------------------
    Shared type
@@ -832,6 +835,6 @@ img.is-missing { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
-  [data-reveal] { opacity: 1; transform: none; }
+  .js [data-reveal] { opacity: 1; transform: none; }
   .hero__img, .podcast__bg, [data-parallax] { transform: none !important; }
 }

@@ -1,11 +1,34 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useHomepageMotion } from '../composables/useHomepageMotion'
 import '../styles/ww-homepage.scss'
 
 const root = ref<HTMLElement | null>(null)
 const menuOpen = ref(false)
 const { counter } = useHomepageMotion(root)
+
+/* Escape has to be listened for at the window: the overlay is a plain <div>,
+   so it never receives key events itself. */
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') menuOpen.value = false
+}
+/* Crossing the desktop breakpoint hides the toggle button; without this the
+   overlay would be stranded open with no way to close it. */
+function onResize() {
+  if (window.innerWidth >= 1180) menuOpen.value = false
+}
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+  window.addEventListener('resize', onResize)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('resize', onResize)
+  document.body.style.overflow = ''
+})
+watch(menuOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
 
 /** Assets live in `public/assets/**` so they are served verbatim at base `/`. */
 const asset = (p: string) => `${import.meta.env.BASE_URL}assets/${p}`
@@ -111,7 +134,7 @@ function onImgError(e: Event) {
       </div>
     </header>
 
-    <div v-show="menuOpen" id="mobile-menu" class="menu" @keydown.esc="menuOpen = false">
+    <div v-show="menuOpen" id="mobile-menu" class="menu">
       <div class="menu__top">
         <img :src="asset('logo-black.svg')" alt="Webber Wentzel" >
         <button class="menu__close" type="button" aria-label="Close menu" @click="menuOpen = false">Close</button>
@@ -224,7 +247,7 @@ function onImgError(e: Event) {
           <p class="specialists__intro">Our team of trusted legal, forensics, and tax specialists consistently rank among the best in Africa.</p>
         </div>
 
-        <div class="rail">
+        <div data-rail class="rail">
           <figure
             v-for="(h, i) in portraits" :key="h"
             class="portrait" :class="{ 'portrait--last': i === portraits.length - 1 }"
@@ -316,7 +339,10 @@ function onImgError(e: Event) {
             <p class="footer__phone"><a href="tel:+27214317000">+27 (0) 21 431 7000</a></p>
           </div>
         </div>
-        <nav v-for="(col, i) in footerCols" :key="i" class="footer__links" aria-label="Footer">
+        <nav
+          v-for="(col, i) in footerCols" :key="i" class="footer__links"
+          :aria-label="i === 0 ? 'Footer' : 'Footer secondary'"
+        >
           <a v-for="l in col" :key="l.label" :href="l.href">{{ l.label }}</a>
         </nav>
       </div>

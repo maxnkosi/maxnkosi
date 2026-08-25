@@ -7,6 +7,8 @@
 (function () {
   "use strict";
 
+  document.documentElement.classList.add("js");
+
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* The breakpoint at which the pinned horizontal rail degrades to a native
@@ -27,10 +29,29 @@
   var track = document.getElementById("services-track");
   var counter = document.getElementById("services-counter");
   var rail = document.getElementById("rail");
+  var main = document.getElementById("main");
 
-  var parallaxEls = Array.prototype.slice.call(
-    document.querySelectorAll("[data-parallax]")
+  /* Each entry caches the element's UNTRANSFORMED centre in document space.
+     Reading getBoundingClientRect() on an element that already carries last
+     frame's transform feeds the offset back into itself, which makes the
+     effective rate rate/(1 - rate) and leaves elements creeping during a fast
+     scroll. Measure once, and again on resize. */
+  var parallax = Array.prototype.map.call(
+    document.querySelectorAll("[data-parallax]"),
+    function (el) {
+      return { el: el, rate: parseFloat(el.getAttribute("data-parallax")) || 0, centre: 0 };
+    }
   );
+
+  function measureParallax() {
+    parallax.forEach(function (p) {
+      var prev = p.el.style.transform;
+      p.el.style.transform = "";
+      var b = p.el.getBoundingClientRect();
+      p.centre = b.top + (window.scrollY || window.pageYOffset || 0) + b.height / 2;
+      p.el.style.transform = prev;
+    });
+  }
 
   /* ------------------------------------------------------------------------
      Theme — the design's "Feel" props, kept configurable at runtime.
@@ -130,7 +151,9 @@
      ------------------------------------------------------------------------ */
 
   var raf = null;
-  var lastY = 0;
+  /* Seeded from the current position: a scroll-restored reload past 1.5vh
+     would otherwise compare against 0 and render the header retracted. */
+  var lastY = window.scrollY || window.pageYOffset || 0;
 
   function frame() {
     raf = null;
@@ -159,11 +182,9 @@
     }
 
     if (!reduce) {
-      parallaxEls.forEach(function (el) {
-        var rate = parseFloat(el.getAttribute("data-parallax")) || 0;
-        var b = el.getBoundingClientRect();
-        var off = (b.top + b.height / 2 - vh / 2) * rate;
-        el.style.transform = "translate3d(0," + off.toFixed(1) + "px,0)";
+      parallax.forEach(function (p) {
+        var off = (p.centre - y - vh / 2) * p.rate;
+        p.el.style.transform = "translate3d(0," + off.toFixed(1) + "px,0)";
       });
     }
   }
@@ -192,17 +213,39 @@
      Compact menu
      ------------------------------------------------------------------------ */
 
+  var FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
   function setMenu(open) {
     if (!menuPanel) return;
     menuPanel.hidden = !open;
     if (menuBtn) menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
     document.body.style.overflow = open ? "hidden" : "";
+
+    /* The overlay is opaque and covers the page, so the content behind it must
+       leave the tab order too — otherwise Tab walks into links nobody can see. */
+    if (main) main.inert = open;
+    if (nav) nav.inert = open;
+
     if (open) {
-      var first = menuPanel.querySelector("a, button");
+      var first = menuPanel.querySelector(FOCUSABLE);
       if (first) first.focus();
     } else if (menuBtn && document.activeElement && menuPanel.contains(document.activeElement)) {
       menuBtn.focus();
     }
+  }
+
+  /* Keep Tab inside the overlay for browsers without inert support. */
+  function trapTab(e) {
+    if (e.key !== "Tab" || !menuPanel || menuPanel.hidden) return;
+    var items = Array.prototype.filter.call(
+      menuPanel.querySelectorAll(FOCUSABLE),
+      function (el) { return el.offsetParent !== null; }
+    );
+    if (!items.length) return;
+    var first = items[0];
+    var last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
 
   if (menuBtn) menuBtn.addEventListener("click", function () { setMenu(menuPanel.hidden); });
@@ -214,6 +257,7 @@
   }
   window.addEventListener("keydown", function (e) {
     if (e.key === "Escape") setMenu(false);
+    trapTab(e);
   });
 
   /* ------------------------------------------------------------------------
@@ -231,14 +275,57 @@
 
   function onResize() {
     layout();
+    measureParallax();
     if (flatRail.matches && track) track.style.transform = "";
     onScroll();
   }
+
+  /* ------------------------------------------------------------------------
+     Anchors into the pinned rail
+
+     The panels live inside a transformed track, so a plain #sectors jump lands
+     on the section start (panel 01) no matter which panel carries the id. Map
+     the target panel to the scroll offset that actually brings it into view.
+     ------------------------------------------------------------------------ */
+
+  function scrollToPanel(panel) {
+    if (!pin || !track || !panel) return false;
+
+    if (flatRail.matches) {
+      track.scrollTo({ left: panel.offsetLeft, behavior: "smooth" });
+      pin.scrollIntoView({ behavior: "smooth", block: "start" });
+      return true;
+    }
+
+    var dist = Math.max(0, track.scrollWidth - window.innerWidth);
+    if (!dist) return false;
+    var progress = Math.min(1, panel.offsetLeft / dist);
+    var top = pin.offsetTop + progress * (pin.offsetHeight - window.innerHeight);
+    window.scrollTo({ top: Math.round(top), behavior: "smooth" });
+    return true;
+  }
+
+  document.addEventListener("click", function (e) {
+    var link = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!link) return;
+    var id = link.getAttribute("href").slice(1);
+    if (!id) return;
+    var target = document.getElementById(id);
+    if (!target || !track || !track.contains(target)) return;
+    if (scrollToPanel(target)) {
+      e.preventDefault();
+      setMenu(false);
+    }
+  });
 
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onResize);
   if (flatRail.addEventListener) flatRail.addEventListener("change", onResize);
 
   layout();
+  measureParallax();
   frame();
+
+  /* Images resolve after first paint and shift everything below them. */
+  window.addEventListener("load", function () { measureParallax(); frame(); });
 })();

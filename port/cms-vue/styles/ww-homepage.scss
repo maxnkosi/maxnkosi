@@ -6,13 +6,13 @@
 
 @font-face {
   font-family: "LT Remark";
-  src: url("/assets/fonts/LTRemark-Regular.otf") format("opentype");
+  src: url('../assets/fonts/LTRemark-Regular.otf') format("opentype");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "General Sans";
-  src: url("/assets/fonts/GeneralSans-Regular.otf") format("opentype");
+  src: url('../assets/fonts/GeneralSans-Regular.otf') format("opentype");
   font-weight: 400;
   font-display: swap;
 }
@@ -67,7 +67,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+/* No native smooth scroll — Lenis owns scrolling and the two fight,
+   producing stalled or oscillating anchor jumps and pin jitter. */
 
 body {
   margin: 0;

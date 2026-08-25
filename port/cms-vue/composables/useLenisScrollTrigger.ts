@@ -46,14 +46,6 @@ export function useLenisScrollTrigger(options: ConstructorParameters<typeof Leni
   // 3. No delta-time clamping.
   gsap.ticker.lagSmoothing(0)
 
-  /* Let ScrollTrigger drive programmatic scrolling through Lenis, so
-     scrollTo / anchor jumps do not fight the smoothing. */
-  ScrollTrigger.scrollerProxy(document.body, {
-    scrollTop(value) {
-      if (arguments.length && typeof value === 'number') lenis.scrollTo(value, { immediate: true })
-      return lenis.scroll
-    },
-  })
 
   const destroy = () => {
     lenis.off('scroll', ScrollTrigger.update)
