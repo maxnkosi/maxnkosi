@@ -1,0 +1,1088 @@
+<title>Injection to Receptor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#0B1016;
+  --panel:rgba(19,27,36,.82);
+  --panel-solid:#131B24;
+  --hairline:#223040;
+  --hairline-soft:#1A2531;
+  --ink:#E6EDF3;
+  --ink-dim:#8FA3B5;
+  --ink-faint:#5E7285;
+  --blood:#E24B58;
+  --cell:#5A9BE0;
+  --receptor:#43C68A;
+  --drug:#FF7E52;
+  --accent:#FF7E52;
+  --accent-ink:#12181F;
+  --track:#22303F;
+}
+:root:not([data-theme="dark"]){
+  --ground:#EDF1F4;
+  --panel:rgba(255,255,255,.84);
+  --panel-solid:#FFFFFF;
+  --hairline:#C9D4DD;
+  --hairline-soft:#DDE5EB;
+  --ink:#0F1922;
+  --ink-dim:#4C6274;
+  --ink-faint:#74889A;
+  --blood:#C2303E;
+  --cell:#2E6FB8;
+  --receptor:#1E9463;
+  --drug:#DC4E1E;
+  --accent:#DC4E1E;
+  --accent-ink:#FFFFFF;
+  --track:#D3DDE5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0B1016;
+    --panel:rgba(19,27,36,.82);
+    --panel-solid:#131B24;
+    --hairline:#223040;
+    --hairline-soft:#1A2531;
+    --ink:#E6EDF3;
+    --ink-dim:#8FA3B5;
+    --ink-faint:#5E7285;
+    --blood:#E24B58;
+    --cell:#5A9BE0;
+    --receptor:#43C68A;
+    --drug:#FF7E52;
+    --accent:#FF7E52;
+    --accent-ink:#12181F;
+    --track:#22303F;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0B1016;
+  --panel:rgba(19,27,36,.82);
+  --panel-solid:#131B24;
+  --hairline:#223040;
+  --hairline-soft:#1A2531;
+  --ink:#E6EDF3;
+  --ink-dim:#8FA3B5;
+  --ink-faint:#5E7285;
+  --blood:#E24B58;
+  --cell:#5A9BE0;
+  --receptor:#43C68A;
+  --drug:#FF7E52;
+  --accent:#FF7E52;
+  --accent-ink:#12181F;
+  --track:#22303F;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+#stage{position:fixed;inset:0}
+#scene{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+#scene.dragging{cursor:grabbing}
+
+#hud{position:fixed;inset:0;pointer-events:none;display:block}
+#hud > *{pointer-events:auto}
+
+/* ---------- readout panel ---------- */
+#panel{
+  position:fixed;top:20px;left:20px;width:322px;max-width:calc(100vw - 40px);
+  background:var(--panel);border:1px solid var(--hairline);
+  backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+}
+.panel-head{display:flex;align-items:baseline;gap:8px;padding:14px 16px 0}
+.dot{width:8px;height:8px;flex:none;align-self:center;background:var(--accent)}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;font-weight:500;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);
+}
+#panel h1{
+  font-family:Archivo,"Helvetica Neue",Arial,sans-serif;font-weight:700;
+  font-size:27px;line-height:1.05;letter-spacing:-.022em;margin:6px 16px 0;
+  text-wrap:balance;
+}
+#panel p{
+  margin:9px 16px 14px;font-size:13.5px;line-height:1.5;color:var(--ink-dim);max-width:34ch;
+}
+.readout{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-top:1px solid var(--hairline-soft);
+}
+.cell{padding:9px 16px 10px;border-top:1px solid var(--hairline-soft)}
+.cell:nth-child(-n+2){border-top:0}
+.cell:nth-child(odd){border-right:1px solid var(--hairline-soft)}
+.cell dt{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:9.5px;font-weight:500;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 3px;
+}
+.cell dd{
+  margin:0;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:15px;
+  font-variant-numeric:tabular-nums;color:var(--ink);
+}
+
+/* ---------- legend ---------- */
+#legend{
+  position:fixed;top:20px;right:20px;
+  background:var(--panel);border:1px solid var(--hairline);padding:11px 14px 12px;
+  backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+  display:flex;flex-direction:column;gap:7px;
+}
+#legend .eyebrow{margin-bottom:2px}
+#keys{display:flex;flex-direction:column;gap:7px}
+.key{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-dim);white-space:nowrap}
+.key i{width:9px;height:9px;flex:none;display:block}
+.key b{font-weight:500;color:var(--ink)}
+
+/* ---------- dock ---------- */
+#dock{
+  position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
+  display:flex;align-items:stretch;flex-wrap:nowrap;justify-content:center;gap:1px;
+  background:var(--hairline);border:1px solid var(--hairline);
+  max-width:calc(100vw - 32px);
+}
+.group{display:flex;align-items:stretch;gap:1px;background:var(--hairline)}
+.slot{background:var(--panel-solid);display:flex;align-items:center}
+
+/* scale ladder */
+.rung{
+  appearance:none;border:0;background:var(--panel-solid);color:var(--ink-dim);
+  font-family:inherit;cursor:pointer;text-align:left;
+  padding:9px 14px 8px;display:flex;flex-direction:column;gap:2px;min-width:104px;
+  border-bottom:2px solid transparent;
+}
+.rung .n{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:9.5px;letter-spacing:.13em;
+  color:var(--ink-faint);
+}
+.rung .l{
+  font-family:Archivo,sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.03em;
+  text-transform:uppercase;
+}
+.rung .m{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px;color:var(--ink-faint);
+  font-variant-numeric:tabular-nums;
+}
+.rung:hover{color:var(--ink)}
+.rung[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.rung[aria-pressed="true"] .n{color:var(--accent)}
+
+/* buttons */
+.btn{
+  appearance:none;border:0;background:var(--panel-solid);color:var(--ink-dim);
+  font-family:Archivo,sans-serif;font-weight:600;font-size:11.5px;letter-spacing:.09em;
+  text-transform:uppercase;cursor:pointer;padding:0 16px;min-width:78px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn:hover{color:var(--ink)}
+.btn svg{display:block;flex:none}
+#play[data-on="true"]{color:var(--accent)}
+
+/* speed */
+.speed{padding:0 15px;gap:11px}
+.speed label{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-faint);
+}
+#speed{appearance:none;width:104px;height:16px;background:transparent;cursor:pointer;margin:0}
+#speed::-webkit-slider-runnable-track{height:2px;background:var(--track)}
+#speed::-moz-range-track{height:2px;background:var(--track)}
+#speed::-webkit-slider-thumb{
+  appearance:none;width:11px;height:11px;background:var(--accent);border:0;border-radius:0;
+  margin-top:-4.5px;
+}
+#speed::-moz-range-thumb{width:11px;height:11px;background:var(--accent);border:0;border-radius:0}
+#speedVal{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;color:var(--ink);
+  font-variant-numeric:tabular-nums;min-width:34px;
+}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* ---------- tooltip ---------- */
+#tip{
+  position:fixed;pointer-events:none;opacity:0;transition:opacity .12s linear;
+  background:var(--panel-solid);border:1px solid var(--hairline);
+  padding:6px 9px;transform:translate(12px,-50%);z-index:5;
+}
+#tip strong{
+  display:block;font-family:Archivo,sans-serif;font-weight:600;font-size:12px;
+  letter-spacing:.02em;color:var(--ink);
+}
+#tip span{
+  display:block;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10px;
+  color:var(--ink-faint);letter-spacing:.06em;margin-top:2px;
+}
+
+#hint{
+  position:fixed;left:20px;bottom:20px;font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);
+  line-height:1.7;
+}
+
+@media (max-width:980px){
+  #legend{display:none}
+  #hint{display:none}
+  #panel{width:296px}
+  #panel h1{font-size:23px}
+}
+@media (max-width:820px){
+  #dock{flex-wrap:wrap}
+  .speed{flex:1 1 100%;justify-content:center;padding:8px 15px}
+}
+@media (max-width:640px){
+  #dock{left:16px;right:16px;transform:none;max-width:none}
+  .group,.slot{flex:1 1 auto}
+  .rung{flex:1 1 0;min-width:0;padding:8px 9px}
+  .speed{flex:1 1 100%;justify-content:center;padding:8px 15px}
+  #panel{top:12px;left:12px;right:12px;width:auto}
+  #panel p{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  #tip{transition:none}
+}
+</style>
+
+<div id="stage"><canvas id="scene"></canvas></div>
+
+<div id="hud">
+  <section id="panel" aria-live="polite">
+    <div class="panel-head"><span class="dot" id="pdot"></span><span class="eyebrow" id="peyebrow">Scale 01 — Systemic</span></div>
+    <h1 id="ptitle">Through the bloodstream</h1>
+    <p id="pbody"></p>
+    <dl class="readout">
+      <div class="cell"><dt>Elapsed</dt><dd id="rTime">00:00.0</dd></div>
+      <div class="cell"><dt>Rate</dt><dd id="rRate">1.00&times;</dd></div>
+      <div class="cell"><dt>Field</dt><dd id="rField">~1 m</dd></div>
+      <div class="cell"><dt id="rEventLabel">Deliveries</dt><dd id="rEvents">0</dd></div>
+    </dl>
+  </section>
+
+  <aside id="legend">
+    <span class="eyebrow">Key</span>
+    <div id="keys"></div>
+  </aside>
+
+  <div id="dock">
+    <div class="group" role="group" aria-label="Scale">
+      <button class="rung" id="v0" aria-pressed="true"><span class="n">01</span><span class="l">Systemic</span><span class="m">~1 m</span></button>
+      <button class="rung" id="v1" aria-pressed="false"><span class="n">02</span><span class="l">Cellular</span><span class="m">~10 µm</span></button>
+      <button class="rung" id="v2" aria-pressed="false"><span class="n">03</span><span class="l">Molecular</span><span class="m">~1 nm</span></button>
+    </div>
+    <div class="group">
+      <button class="btn" id="play" data-on="true" aria-label="Pause animation"><svg id="playIcon" width="9" height="11" viewBox="0 0 9 11" aria-hidden="true"><rect x="0" y="0" width="3" height="11" fill="currentColor"/><rect x="6" y="0" width="3" height="11" fill="currentColor"/></svg><span id="playLabel">Pause</span></button>
+      <button class="btn" id="reset" aria-label="Reset current view">Reset</button>
+      <div class="slot speed">
+        <label for="speed">Speed</label>
+        <input type="range" id="speed" min="0.1" max="2" step="0.05" value="1">
+        <span id="speedVal">1.00&times;</span>
+      </div>
+    </div>
+  </div>
+
+  <p id="hint">Drag to orbit · Scroll to zoom · Hover to label<br>Keys 1&ndash;3 scale · Space play · R reset</p>
+</div>
+
+<div id="tip" role="status"><strong id="tipName"></strong><span id="tipSub"></span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  if (!window.THREE) { document.getElementById('ptitle').textContent = 'Renderer unavailable'; return; }
+
+  var TAU = Math.PI * 2;
+  var C = {
+    blood: 0xE24B58, vessel: 0x8E2733, cell: 0x5A9BE0, cellDeep: 0x2D5F94,
+    receptor: 0x43C68A, drug: 0xFF7E52, nucleus: 0x38668F,
+    H: 0xF2F4F6, Cc: 0x8B929B, O: 0xE24B58, N: 0x5A9BE0
+  };
+
+  var VIEWS = [{
+    eyebrow: 'Scale 01 — Systemic', title: 'Through the bloodstream',
+    body: 'Drug molecules travel through the bloodstream to target cells across the body. Speed of distribution depends on injection site and blood flow.',
+    field: '~1 m', eventLabel: 'Deliveries', dist: 26, phi: 1.32, theta: 0.30, accent: C.blood,
+    keys: [['--blood', 'Bloodstream', 'vessel lumen'], ['--cell', 'Target cells', 'muscle · fat · liver'], ['--drug', 'Drug molecules', 'in circulation']]
+  }, {
+    eyebrow: 'Scale 02 — Cellular', title: 'At the membrane',
+    body: 'Drug molecules approach the cell membrane. Receptors (green) on the surface await binding. Each drug targets specific receptor types.',
+    field: '~10 µm', eventLabel: 'Bindings', dist: 21, phi: 1.28, theta: 0.55, accent: C.receptor,
+    keys: [['--cell', 'Cell membrane', 'lipid bilayer'], ['--cell', 'Nucleus', 'cell core'], ['--receptor', 'Receptors', '14 binding sites'], ['--drug', 'Drug molecules', 'approaching']]
+  }, {
+    eyebrow: 'Scale 03 — Molecular', title: 'The binding shape',
+    body: "At the atomic scale, the drug's chemical structure determines which receptors it binds to. Shape, charge, and functional groups all matter.",
+    field: '~1 nm', eventLabel: 'Bonds', dist: 15, phi: 1.24, theta: 0.42, accent: C.drug,
+    keys: [['--drug', 'Drug molecule', 'core scaffold'], ['--ink', 'Hydrogen', 'H'], ['--ink-dim', 'Carbon', 'C'], ['--blood', 'Oxygen', 'O'], ['--cell', 'Nitrogen', 'N']]
+  }];
+
+  /* ---------------- renderer ---------------- */
+  var canvas = document.getElementById('scene');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+  if (THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
+
+  var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 400);
+  var raycaster = new THREE.Raycaster();
+  var pointer = new THREE.Vector2(-2, -2);
+  var clock = new THREE.Clock();
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var state = {
+    view: 0, playing: !reduced, speed: 1, t: 0, events: 0,
+    orbit: { theta: 0.30, phi: 1.32, radius: 26 },
+    goal: { theta: 0.30, phi: 1.32, radius: 26 },
+    parallax: new THREE.Vector2(0, 0), parallaxGoal: new THREE.Vector2(0, 0)
+  };
+  var world = null;
+
+  function isDark() {
+    var a = document.documentElement.getAttribute('data-theme');
+    if (a === 'dark') return true;
+    if (a === 'light') return false;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  /* ---------------- shared builders ---------------- */
+  function lights(scene) {
+    var dark = isDark();
+    var hemi = new THREE.HemisphereLight(0xC8DCF0, dark ? 0x0A1017 : 0x9BAAB8, dark ? 0.72 : 1.05);
+    scene.add(hemi);
+    var key = new THREE.DirectionalLight(0xFFFFFF, dark ? 0.95 : 1.25);
+    key.position.set(6, 9, 8); scene.add(key);
+    var fill = new THREE.DirectionalLight(0x9FC4E8, dark ? 0.42 : 0.34);
+    fill.position.set(-8, -3, -6); scene.add(fill);
+    return { hemi: hemi, key: key, fill: fill };
+  }
+
+  function outline(geo, color, opacity) {
+    return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      color: color, wireframe: true, transparent: true, opacity: opacity, depthWrite: false
+    }));
+  }
+
+  function drugMesh(radius) {
+    var g = new THREE.Group();
+    var core = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(radius, 1),
+      new THREE.MeshStandardMaterial({
+        color: C.drug, emissive: C.drug, emissiveIntensity: 0.55,
+        roughness: 0.35, metalness: 0.1
+      })
+    );
+    var halo = new THREE.Mesh(
+      new THREE.SphereGeometry(radius * 2.1, 14, 12),
+      new THREE.MeshBasicMaterial({
+        color: C.drug, transparent: true, opacity: 0.13,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    g.add(core); g.add(halo);
+    g.userData.core = core; g.userData.halo = halo;
+    g.userData.label = 'Drug molecule';
+    g.userData.sub = 'unbound · in transit';
+    return g;
+  }
+
+  /* --------- particle bursts (binding events) --------- */
+  function Bursts(scene, color, count, per) {
+    var pool = [], i, j;
+    for (i = 0; i < count; i++) {
+      var pos = new Float32Array(per * 3);
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      var pts = new THREE.Points(geo, new THREE.PointsMaterial({
+        color: color, size: 0.26, transparent: true, opacity: 0,
+        depthWrite: false, blending: THREE.AdditiveBlending
+      }));
+      pts.frustumCulled = false;
+      scene.add(pts);
+      pool.push({ pts: pts, pos: pos, vel: new Float32Array(per * 3), life: 0 });
+    }
+    var cursor = 0;
+    return {
+      fire: function (p) {
+        var b = pool[cursor]; cursor = (cursor + 1) % pool.length;
+        b.life = 1;
+        for (j = 0; j < per; j++) {
+          var th = Math.random() * TAU, ph = Math.acos(2 * Math.random() - 1);
+          var s = 1.6 + Math.random() * 2.4;
+          b.pos[j * 3] = p.x; b.pos[j * 3 + 1] = p.y; b.pos[j * 3 + 2] = p.z;
+          b.vel[j * 3] = Math.sin(ph) * Math.cos(th) * s;
+          b.vel[j * 3 + 1] = Math.cos(ph) * s;
+          b.vel[j * 3 + 2] = Math.sin(ph) * Math.sin(th) * s;
+        }
+        b.pts.geometry.attributes.position.needsUpdate = true;
+        b.pts.material.opacity = 0.95;
+      },
+      update: function (dt) {
+        for (var k = 0; k < pool.length; k++) {
+          var b = pool[k];
+          if (b.life <= 0) continue;
+          b.life = Math.max(0, b.life - dt * 1.5);
+          for (j = 0; j < per; j++) {
+            b.pos[j * 3] += b.vel[j * 3] * dt;
+            b.pos[j * 3 + 1] += b.vel[j * 3 + 1] * dt;
+            b.pos[j * 3 + 2] += b.vel[j * 3 + 2] * dt;
+            b.vel[j * 3] *= 0.94; b.vel[j * 3 + 1] *= 0.94; b.vel[j * 3 + 2] *= 0.94;
+          }
+          b.pts.geometry.attributes.position.needsUpdate = true;
+          b.pts.material.opacity = b.life * 0.95;
+        }
+      }
+    };
+  }
+
+  /* ---------------- view 01 · systemic ---------------- */
+  function buildSystemic() {
+    var scene = new THREE.Scene();
+    lights(scene);
+    var hover = [];
+    var LEN = 34, R = 1.25;
+
+    var tubeGeo = new THREE.CylinderGeometry(R, R, LEN, 40, 1, true);
+    var tube = new THREE.Mesh(tubeGeo, new THREE.MeshStandardMaterial({
+      color: C.blood, transparent: true, opacity: 0.2, roughness: 0.5,
+      side: THREE.DoubleSide, depthWrite: false
+    }));
+    tube.rotation.z = Math.PI / 2;
+    tube.userData.label = 'Bloodstream';
+    tube.userData.sub = 'vessel lumen · ~5 mm';
+    tube.userData.lowPriority = true;
+    scene.add(tube); hover.push(tube);
+
+    var wall = outline(new THREE.CylinderGeometry(R * 1.005, R * 1.005, LEN, 22, 1, true), C.blood, 0.16);
+    wall.rotation.z = Math.PI / 2; scene.add(wall);
+
+    var rings = new THREE.Group();
+    for (var r = 0; r < 9; r++) {
+      var ring = new THREE.Mesh(
+        new THREE.TorusGeometry(R * 1.03, 0.028, 6, 30),
+        new THREE.MeshBasicMaterial({ color: C.blood, transparent: true, opacity: 0.4 })
+      );
+      ring.position.x = -LEN / 2 + 2 + r * ((LEN - 4) / 8);
+      ring.rotation.y = Math.PI / 2;
+      rings.add(ring);
+    }
+    scene.add(rings);
+
+    var defs = [
+      { name: 'Muscle cell', sub: 'rapid uptake · high perfusion', pos: new THREE.Vector3(-8.5, -5.4, 2.2) },
+      { name: 'Fat cell', sub: 'slow uptake · lipid store', pos: new THREE.Vector3(0.5, 5.8, -2.6) },
+      { name: 'Liver cell', sub: 'metabolism · first-pass clearance', pos: new THREE.Vector3(9.5, -5.0, -1.4) }
+    ];
+    var targets = [];
+    defs.forEach(function (d) {
+      var g = new THREE.Group(); g.position.copy(d.pos);
+      var geo = new THREE.IcosahedronGeometry(1.85, 1);
+      var body = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+        color: C.cell, transparent: true, opacity: 0.42, roughness: 0.45, metalness: 0.05
+      }));
+      var wire = outline(new THREE.IcosahedronGeometry(1.88, 1), C.cell, 0.55);
+      g.add(body); g.add(wire);
+      g.userData.label = d.name; g.userData.sub = d.sub;
+      g.userData.body = body; g.userData.pulse = 0;
+      scene.add(g); hover.push(g); targets.push(g);
+
+      var anchor = new THREE.Vector3(d.pos.x, Math.sign(d.pos.y) * R, 0);
+      var lg = new THREE.BufferGeometry().setFromPoints([anchor, d.pos.clone()]);
+      scene.add(new THREE.Line(lg, new THREE.LineBasicMaterial({
+        color: C.blood, transparent: true, opacity: 0.34
+      })));
+    });
+
+    var bursts = Bursts(scene, C.drug, 6, 24);
+    var mols = [];
+    for (var i = 0; i < 30; i++) {
+      var m = drugMesh(0.24);
+      m.userData.p = Math.random() * LEN;
+      m.userData.ph = Math.random() * TAU;
+      m.userData.v = 3.2 + Math.random() * 2.2;
+      m.userData.oy = (Math.random() - 0.5) * 0.9;
+      m.userData.oz = (Math.random() - 0.5) * 0.9;
+      m.userData.target = Math.random() < 0.42 ? (i % 3) : -1;
+      m.userData.mode = 'flow';
+      m.userData.k = 0;
+      m.userData.from = new THREE.Vector3();
+      scene.add(m); mols.push(m); hover.push(m);
+    }
+
+    function place(m) {
+      var u = m.userData;
+      m.position.set(
+        -LEN / 2 + u.p,
+        Math.sin(state.t * 1.9 + u.ph) * 0.4 + u.oy,
+        Math.cos(state.t * 1.5 + u.ph) * 0.34 + u.oz
+      );
+    }
+
+    return {
+      scene: scene, hover: hover,
+      update: function (dt) {
+        rings.children.forEach(function (ring, i) { ring.rotation.z += dt * (0.3 + i * 0.03); });
+        targets.forEach(function (g, i) {
+          g.rotation.y += dt * 0.28; g.rotation.x += dt * 0.13;
+          g.userData.pulse = Math.max(0, g.userData.pulse - dt * 1.9);
+          var s = 1 + g.userData.pulse * 0.16;
+          g.scale.setScalar(s);
+          g.userData.body.material.opacity = 0.42 + g.userData.pulse * 0.3;
+        });
+        mols.forEach(function (m) {
+          var u = m.userData;
+          m.rotation.x += dt * 1.5; m.rotation.y += dt * 1.1;
+          if (u.mode === 'flow') {
+            u.p += u.v * dt;
+            var tx = u.target >= 0 ? targets[u.target].position.x + LEN / 2 : Infinity;
+            if (u.target >= 0 && u.p >= tx - 1.2) {
+              place(m); u.from.copy(m.position); u.mode = 'commit'; u.k = 0;
+            } else if (u.p > LEN) {
+              u.p -= LEN;
+              u.target = Math.random() < 0.42 ? (Math.random() * 3) | 0 : -1;
+              place(m);
+            } else place(m);
+          } else {
+            u.k += dt * 1.5;
+            var tg = targets[u.target];
+            if (u.k >= 1) {
+              bursts.fire(tg.position);
+              tg.userData.pulse = 1;
+              state.events++;
+              u.mode = 'flow'; u.p = 0;
+              u.target = Math.random() < 0.42 ? (Math.random() * 3) | 0 : -1;
+              place(m);
+            } else {
+              var e = u.k * u.k * (3 - 2 * u.k);
+              m.position.lerpVectors(u.from, tg.position, e);
+              var sc = 1 - e * 0.5;
+              m.scale.setScalar(sc);
+              m.userData.halo.material.opacity = 0.13 + e * 0.35;
+            }
+          }
+          if (u.mode === 'flow' && m.scale.x !== 1) {
+            m.scale.setScalar(1); m.userData.halo.material.opacity = 0.13;
+          }
+        });
+        bursts.update(dt);
+      }
+    };
+  }
+
+  /* ---------------- view 02 · cellular ---------------- */
+  function buildCellular() {
+    var scene = new THREE.Scene();
+    lights(scene);
+    var hover = [];
+    var CR = 6.2, RECEPTORS = 14;
+
+    var membrane = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(CR, 3),
+      new THREE.MeshStandardMaterial({
+        color: C.cell, transparent: true, opacity: 0.17, roughness: 0.35,
+        metalness: 0.05, side: THREE.DoubleSide, depthWrite: false
+      })
+    );
+    membrane.userData.label = 'Cell membrane';
+    membrane.userData.sub = 'lipid bilayer · ~5 nm thick';
+    membrane.userData.lowPriority = true;
+    scene.add(membrane); hover.push(membrane);
+    var mwire = outline(new THREE.IcosahedronGeometry(CR * 1.002, 2), C.cell, 0.3);
+    scene.add(mwire);
+
+    var nucleus = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(2.0, 2),
+      new THREE.MeshStandardMaterial({
+        color: C.nucleus, roughness: 0.55, metalness: 0.08,
+        emissive: C.cellDeep, emissiveIntensity: 0.22
+      })
+    );
+    nucleus.userData.label = 'Nucleus';
+    nucleus.userData.sub = 'genomic DNA · transcription';
+    scene.add(nucleus); hover.push(nucleus);
+    scene.add(outline(new THREE.IcosahedronGeometry(2.06, 1), C.cell, 0.4));
+
+    var recs = [];
+    var golden = Math.PI * (3 - Math.sqrt(5));
+    for (var i = 0; i < RECEPTORS; i++) {
+      var y = 1 - (i / (RECEPTORS - 1)) * 2;
+      var rad = Math.sqrt(Math.max(0, 1 - y * y));
+      var th = golden * i;
+      var dir = new THREE.Vector3(Math.cos(th) * rad, y, Math.sin(th) * rad).normalize();
+      var box = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.5, 0.78),
+        new THREE.MeshStandardMaterial({
+          color: C.receptor, emissive: C.receptor, emissiveIntensity: 0.12,
+          roughness: 0.4, metalness: 0.15
+        })
+      );
+      box.position.copy(dir).multiplyScalar(CR);
+      box.lookAt(0, 0, 0);
+      box.userData.label = 'Receptor protein';
+      box.userData.sub = 'site ' + String(i + 1).padStart(2, '0') + ' · awaiting ligand';
+      box.userData.dir = dir;
+      box.userData.glow = 0;
+      box.userData.taken = false;
+      scene.add(box); hover.push(box); recs.push(box);
+    }
+
+    var bursts = Bursts(scene, C.receptor, 5, 26);
+    var mols = [];
+    for (var m0 = 0; m0 < 5; m0++) {
+      var m = drugMesh(0.38);
+      var a = Math.random() * TAU, b = Math.acos(2 * Math.random() - 1);
+      m.userData.dir = new THREE.Vector3(
+        Math.sin(b) * Math.cos(a), Math.cos(b), Math.sin(b) * Math.sin(a)
+      ).normalize();
+      m.userData.r = 11 + Math.random() * 2.5;
+      m.userData.axis = new THREE.Vector3(
+        Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5
+      ).normalize();
+      m.userData.rec = -1;
+      m.userData.hold = 0;
+      scene.add(m); mols.push(m); hover.push(m);
+    }
+
+    function assign(m) {
+      var free = recs.filter(function (r) { return !r.userData.taken; });
+      if (!free.length) return;
+      var r = free[(Math.random() * free.length) | 0];
+      r.userData.taken = true;
+      m.userData.rec = recs.indexOf(r);
+    }
+    mols.forEach(assign);
+
+    var tmp = new THREE.Vector3();
+
+    return {
+      scene: scene, hover: hover,
+      update: function (dt) {
+        membrane.rotation.y += dt * 0.09;
+        mwire.rotation.y += dt * 0.09;
+        nucleus.rotation.y -= dt * 0.22;
+        nucleus.rotation.x += dt * 0.1;
+
+        mols.forEach(function (m) {
+          var u = m.userData;
+          m.rotation.x += dt * 1.7; m.rotation.y += dt * 1.2;
+
+          if (u.hold > 0) {
+            u.hold -= dt;
+            if (u.hold <= 0) {
+              if (u.rec >= 0) recs[u.rec].userData.taken = false;
+              u.rec = -1; u.r = 11 + Math.random() * 2.5;
+              u.dir.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+              assign(m);
+              m.scale.setScalar(1);
+              u.halo.material.opacity = 0.13;
+            }
+            return;
+          }
+          if (u.rec < 0) { assign(m); if (u.rec < 0) return; }
+
+          var rec = recs[u.rec];
+          u.dir.applyAxisAngle(u.axis, dt * 0.85);
+          u.dir.lerp(rec.userData.dir, Math.min(1, dt * 0.75)).normalize();
+          var goalR = CR + 0.82;
+          u.r += (goalR - u.r) * Math.min(1, dt * 0.85);
+          m.position.copy(u.dir).multiplyScalar(u.r);
+
+          var d = m.position.distanceTo(rec.position);
+          if (d < 0.55) {
+            bursts.fire(rec.position);
+            rec.userData.glow = 1;
+            rec.userData.sub = 'bound · complex formed';
+            state.events++;
+            u.hold = 1.1;
+            m.position.copy(rec.position);
+            m.scale.setScalar(0.72);
+            u.halo.material.opacity = 0.42;
+          }
+        });
+
+        recs.forEach(function (r) {
+          var best = 99;
+          for (var i = 0; i < mols.length; i++) {
+            tmp.copy(mols[i].position);
+            var d = tmp.distanceTo(r.position);
+            if (d < best) best = d;
+          }
+          var prox = Math.max(0, 1 - best / 4.2);
+          r.userData.glow = Math.max(r.userData.glow - dt * 1.4, prox);
+          r.material.emissiveIntensity = 0.12 + r.userData.glow * 1.5;
+          r.scale.setScalar(1 + r.userData.glow * 0.42);
+        });
+
+        bursts.update(dt);
+      }
+    };
+  }
+
+  /* ---------------- view 03 · molecular ---------------- */
+  function buildMolecular() {
+    var scene = new THREE.Scene();
+    lights(scene);
+    var hover = [];
+
+    var core = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.55, 1),
+      new THREE.MeshStandardMaterial({
+        color: C.drug, emissive: C.drug, emissiveIntensity: 0.42,
+        roughness: 0.32, metalness: 0.12
+      })
+    );
+    core.userData.label = 'Drug molecule';
+    core.userData.sub = 'core scaffold · ~1 nm';
+    scene.add(core); hover.push(core);
+    var coreWire = outline(new THREE.IcosahedronGeometry(1.62, 1), C.drug, 0.35);
+    scene.add(coreWire);
+    var halo = new THREE.Mesh(
+      new THREE.SphereGeometry(2.35, 20, 16),
+      new THREE.MeshBasicMaterial({
+        color: C.drug, transparent: true, opacity: 0.1,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    scene.add(halo);
+
+    var atomDefs = [
+      { n: 'Hydrogen', s: 'H · 1.008 u', c: C.H, r: 0.5, p: new THREE.Vector3(1, 1, 1) },
+      { n: 'Carbon', s: 'C · 12.011 u', c: C.Cc, r: 0.82, p: new THREE.Vector3(1, -1, -1) },
+      { n: 'Oxygen', s: 'O · 15.999 u', c: C.O, r: 0.74, p: new THREE.Vector3(-1, 1, -1) },
+      { n: 'Nitrogen', s: 'N · 14.007 u', c: C.N, r: 0.72, p: new THREE.Vector3(-1, -1, 1) }
+    ];
+
+    var shell = new THREE.Group();
+    scene.add(shell);
+    var atoms = [];
+
+    atomDefs.forEach(function (d) {
+      var at = d.p.clone().normalize().multiplyScalar(3.5);
+      var mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(d.r, 26, 20),
+        new THREE.MeshStandardMaterial({
+          color: d.c, roughness: 0.34, metalness: 0.18,
+          emissive: d.c, emissiveIntensity: 0.1
+        })
+      );
+      mesh.position.copy(at);
+      mesh.userData.label = d.n; mesh.userData.sub = d.s;
+      mesh.userData.home = at.clone();
+      mesh.userData.ph = Math.random() * TAU;
+      shell.add(mesh); atoms.push(mesh); hover.push(mesh);
+
+      // bond line from atom to the central molecule
+      var len = at.length() - d.r - 1.4;
+      var bond = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.035, 0.035, Math.max(0.2, len), 6),
+        new THREE.MeshBasicMaterial({ color: 0xC7D3DE, transparent: true, opacity: 0.5 })
+      );
+      bond.position.copy(at.clone().normalize().multiplyScalar(1.4 + len / 2));
+      bond.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), at.clone().normalize());
+      shell.add(bond);
+      mesh.userData.bond = bond;
+    });
+
+    var orbits = new THREE.Group();
+    [[0, 0, 0], [Math.PI / 2.2, 0.5, 0]].forEach(function (rot, i) {
+      var ring = new THREE.Mesh(
+        new THREE.TorusGeometry(4.5 + i * 0.55, 0.014, 5, 96),
+        new THREE.MeshBasicMaterial({ color: C.drug, transparent: true, opacity: 0.22 })
+      );
+      ring.rotation.set(rot[0], rot[1], rot[2]);
+      orbits.add(ring);
+    });
+    scene.add(orbits);
+
+    return {
+      scene: scene, hover: hover,
+      update: function (dt) {
+        core.rotation.y += dt * 0.42; core.rotation.x += dt * 0.19;
+        coreWire.rotation.copy(core.rotation);
+        var pulse = 0.42 + Math.sin(state.t * 1.7) * 0.12;
+        core.material.emissiveIntensity = pulse;
+        halo.material.opacity = 0.09 + Math.sin(state.t * 1.7) * 0.03;
+
+        shell.rotation.y += dt * 0.5;
+        shell.rotation.x += dt * 0.17;
+        orbits.rotation.y -= dt * 0.22;
+        orbits.rotation.z += dt * 0.1;
+
+        atoms.forEach(function (a, i) {
+          a.rotation.y += dt * 0.9;
+          var bob = 1 + Math.sin(state.t * 1.6 + a.userData.ph) * 0.045;
+          a.position.copy(a.userData.home).multiplyScalar(bob);
+          a.userData.bond.material.opacity = 0.42 + Math.sin(state.t * 1.6 + a.userData.ph) * 0.1;
+        });
+      }
+    };
+  }
+
+  var BUILDERS = [buildSystemic, buildCellular, buildMolecular];
+
+  /* ---------------- lifecycle ---------------- */
+  function disposeWorld(w) {
+    if (!w) return;
+    w.scene.traverse(function (o) {
+      if (o.geometry) o.geometry.dispose();
+      if (o.material) {
+        if (Array.isArray(o.material)) o.material.forEach(function (m) { m.dispose(); });
+        else o.material.dispose();
+      }
+    });
+  }
+
+  function loadView(i, keepCamera) {
+    disposeWorld(world);
+    state.view = i;
+    state.t = 0;
+    state.events = 0;
+    world = BUILDERS[i]();
+    var v = VIEWS[i];
+    state.goal.radius = v.dist;
+    if (!keepCamera) {
+      state.goal.theta = v.theta;
+      state.goal.phi = v.phi;
+    }
+    paintPanel(v);
+    for (var b = 0; b < 3; b++) {
+      document.getElementById('v' + b).setAttribute('aria-pressed', String(b === i));
+    }
+    hideTip();
+  }
+
+  function paintPanel(v) {
+    document.getElementById('peyebrow').textContent = v.eyebrow;
+    document.getElementById('ptitle').textContent = v.title;
+    document.getElementById('pbody').textContent = v.body;
+    document.getElementById('rField').textContent = v.field;
+    document.getElementById('rEventLabel').textContent = v.eventLabel;
+    document.getElementById('pdot').style.background = '#' + v.accent.toString(16).padStart(6, '0');
+    var keys = document.getElementById('keys');
+    keys.innerHTML = '';
+    v.keys.forEach(function (k) {
+      var row = document.createElement('div');
+      row.className = 'key';
+      var sw = document.createElement('i');
+      sw.style.background = 'var(' + k[0] + ')';
+      var txt = document.createElement('span');
+      txt.innerHTML = '<b></b> ';
+      txt.querySelector('b').textContent = k[1];
+      txt.appendChild(document.createTextNode(k[2]));
+      row.appendChild(sw); row.appendChild(txt);
+      keys.appendChild(row);
+    });
+  }
+
+  /* ---------------- interaction ---------------- */
+  var dragging = false, lastX = 0, lastY = 0, moved = false;
+
+  canvas.addEventListener('pointerdown', function (e) {
+    dragging = true; moved = false; lastX = e.clientX; lastY = e.clientY;
+    canvas.classList.add('dragging');
+    canvas.setPointerCapture(e.pointerId);
+    hideTip();
+  });
+  canvas.addEventListener('pointermove', function (e) {
+    var rect = canvas.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    state.parallaxGoal.set(pointer.x * 1.1, pointer.y * 0.75);
+    if (!dragging) return;
+    var dx = e.clientX - lastX, dy = e.clientY - lastY;
+    if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+    lastX = e.clientX; lastY = e.clientY;
+    state.goal.theta -= dx * 0.006;
+    state.goal.phi = Math.max(0.16, Math.min(Math.PI - 0.16, state.goal.phi - dy * 0.006));
+  });
+  function endDrag(e) {
+    dragging = false; canvas.classList.remove('dragging');
+    if (e && e.pointerId != null && canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)) {
+      canvas.releasePointerCapture(e.pointerId);
+    }
+  }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('pointerleave', function () {
+    pointer.set(-2, -2); state.parallaxGoal.set(0, 0); hideTip();
+  });
+
+  canvas.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var f = Math.exp(e.deltaY * 0.0012);
+    state.goal.radius = Math.max(6, Math.min(70, state.goal.radius * f));
+  }, { passive: false });
+
+  var pinch = 0;
+  canvas.addEventListener('touchmove', function (e) {
+    if (e.touches.length !== 2) return;
+    e.preventDefault();
+    var dx = e.touches[0].clientX - e.touches[1].clientX;
+    var dy = e.touches[0].clientY - e.touches[1].clientY;
+    var d = Math.hypot(dx, dy);
+    if (pinch) state.goal.radius = Math.max(6, Math.min(70, state.goal.radius * (pinch / d)));
+    pinch = d;
+  }, { passive: false });
+  canvas.addEventListener('touchend', function () { pinch = 0; });
+
+  /* controls */
+  function setPlaying(on) {
+    state.playing = on;
+    var btn = document.getElementById('play');
+    btn.dataset.on = String(on);
+    btn.setAttribute('aria-label', on ? 'Pause animation' : 'Play animation');
+    document.getElementById('playLabel').textContent = on ? 'Pause' : 'Play';
+    document.getElementById('playIcon').innerHTML = on
+      ? '<rect x="0" y="0" width="3" height="11" fill="currentColor"/><rect x="6" y="0" width="3" height="11" fill="currentColor"/>'
+      : '<path d="M0 0 L9 5.5 L0 11 Z" fill="currentColor"/>';
+  }
+  document.getElementById('play').addEventListener('click', function () { setPlaying(!state.playing); });
+  document.getElementById('reset').addEventListener('click', function () { loadView(state.view, false); });
+  for (var vb = 0; vb < 3; vb++) {
+    (function (idx) {
+      document.getElementById('v' + idx).addEventListener('click', function () {
+        if (state.view !== idx) loadView(idx, false);
+      });
+    })(vb);
+  }
+  var speedEl = document.getElementById('speed');
+  speedEl.addEventListener('input', function () {
+    state.speed = parseFloat(speedEl.value);
+    document.getElementById('speedVal').textContent = state.speed.toFixed(2) + '×';
+    document.getElementById('rRate').textContent = state.speed.toFixed(2) + '×';
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === '1' || e.key === '2' || e.key === '3') {
+      loadView(parseInt(e.key, 10) - 1, false);
+    } else if (e.code === 'Space') {
+      e.preventDefault(); setPlaying(!state.playing);
+    } else if (e.key === 'r' || e.key === 'R') {
+      loadView(state.view, false);
+    }
+  });
+
+  /* tooltip */
+  var tip = document.getElementById('tip');
+  var tipName = document.getElementById('tipName');
+  var tipSub = document.getElementById('tipSub');
+  var tipOn = false;
+  function hideTip() { if (tipOn) { tip.style.opacity = '0'; tipOn = false; } }
+
+  function labelled(o) {
+    while (o) { if (o.userData && o.userData.label) return o; o = o.parent; }
+    return null;
+  }
+
+  function probe() {
+    if (dragging || pointer.x < -1.5 || !world) { hideTip(); return; }
+    raycaster.setFromCamera(pointer, camera);
+    var hits = raycaster.intersectObjects(world.hover, true);
+    if (!hits.length) { hideTip(); return; }
+    // Translucent shells (vessel wall, membrane) sit in front of everything they
+    // contain, so they only win a hover when nothing else is under the cursor.
+    var obj = null, fallback = null;
+    for (var i = 0; i < hits.length; i++) {
+      var cand = labelled(hits[i].object);
+      if (!cand) continue;
+      if (!cand.userData.lowPriority) { obj = cand; break; }
+      if (!fallback) fallback = cand;
+    }
+    if (!obj) obj = fallback;
+    if (!obj) { hideTip(); return; }
+    tipName.textContent = obj.userData.label;
+    tipSub.textContent = obj.userData.sub || '';
+    var rect = canvas.getBoundingClientRect();
+    tip.style.left = (rect.left + (pointer.x + 1) / 2 * rect.width) + 'px';
+    tip.style.top = (rect.top + (1 - pointer.y) / 2 * rect.height) + 'px';
+    if (!tipOn) { tip.style.opacity = '1'; tipOn = true; }
+  }
+
+  /* ---------------- resize ---------------- */
+  function resize() {
+    var w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+
+  /* ---------------- theme ---------------- */
+  function relight() {
+    var dark = isDark();
+    if (!world) return;
+    world.scene.traverse(function (o) {
+      if (o.isHemisphereLight) { o.intensity = dark ? 0.72 : 1.05; o.groundColor.setHex(dark ? 0x0A1017 : 0x9BAAB8); }
+      else if (o.isDirectionalLight) {
+        o.intensity = o.position.x > 0 ? (dark ? 0.95 : 1.25) : (dark ? 0.42 : 0.34);
+      }
+    });
+  }
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener
+    ? window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', relight)
+    : null;
+  new MutationObserver(relight).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  /* ---------------- loop ---------------- */
+  var timeEl = document.getElementById('rTime');
+  var eventsEl = document.getElementById('rEvents');
+  var lastShown = -1;
+
+  function fmt(s) {
+    var m = Math.floor(s / 60);
+    var r = s - m * 60;
+    return String(m).padStart(2, '0') + ':' + (r < 10 ? '0' : '') + r.toFixed(1);
+  }
+
+  function frame() {
+    requestAnimationFrame(frame);
+    var raw = Math.min(clock.getDelta(), 0.05);
+    var dt = raw * state.speed;
+
+    if (state.playing) {
+      state.t += dt;
+      world.update(dt);
+    }
+
+    var o = state.orbit, g = state.goal, k = Math.min(1, raw * 6);
+    o.theta += (g.theta - o.theta) * k;
+    o.phi += (g.phi - o.phi) * k;
+    o.radius += (g.radius - o.radius) * k;
+    state.parallax.lerp(state.parallaxGoal, Math.min(1, raw * 2.4));
+
+    camera.position.set(
+      o.radius * Math.sin(o.phi) * Math.sin(o.theta) + state.parallax.x,
+      o.radius * Math.cos(o.phi) + state.parallax.y,
+      o.radius * Math.sin(o.phi) * Math.cos(o.theta)
+    );
+    camera.lookAt(0, 0, 0);
+
+    probe();
+    renderer.render(world.scene, camera);
+
+    var shown = Math.floor(state.t * 10);
+    if (shown !== lastShown) {
+      lastShown = shown;
+      timeEl.textContent = fmt(state.t);
+      eventsEl.textContent = state.view === 2 ? '4' : String(state.events);
+    }
+  }
+
+  /* ---------------- boot ---------------- */
+  resize();
+  loadView(0, false);
+  state.orbit.theta = state.goal.theta;
+  state.orbit.phi = state.goal.phi;
+  state.orbit.radius = state.goal.radius;
+  setPlaying(state.playing);
+  document.getElementById('rRate').textContent = state.speed.toFixed(2) + '×';
+  frame();
+})();
+</script>
