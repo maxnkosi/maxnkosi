@@ -21,6 +21,9 @@
   --accent:#FF7E52;
   --accent-ink:#12181F;
   --track:#22303F;
+  --seg:#2C3B4C;
+  --contrast:#FFE08A;
+  --vein:#3F7CBE;
 }
 :root:not([data-theme="dark"]){
   --ground:#EDF1F4;
@@ -38,6 +41,9 @@
   --accent:#DC4E1E;
   --accent-ink:#FFFFFF;
   --track:#D3DDE5;
+  --seg:#C3CFD9;
+  --contrast:#B5791A;
+  --vein:#1F5A94;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -56,6 +62,9 @@
     --accent:#FF7E52;
     --accent-ink:#12181F;
     --track:#22303F;
+  --seg:#2C3B4C;
+  --contrast:#FFE08A;
+  --vein:#3F7CBE;
   }
 }
 :root[data-theme="dark"]{
@@ -74,9 +83,14 @@
   --accent:#FF7E52;
   --accent-ink:#12181F;
   --track:#22303F;
+  --seg:#2C3B4C;
+  --contrast:#FFE08A;
+  --vein:#3F7CBE;
 }
 
 *{box-sizing:border-box}
+/* #sites sets display:flex, which outranks the UA [hidden] rule */
+[hidden]{display:none !important}
 html,body{height:100%}
 body{
   margin:0;
@@ -137,6 +151,53 @@ body{
   margin:0;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:15px;
   font-variant-numeric:tabular-nums;color:var(--ink);
 }
+
+/* ---------- phase timeline ---------- */
+#timeline{border-top:1px solid var(--hairline-soft);padding:11px 16px 13px}
+.tl-track{
+  position:relative;height:10px;background:var(--track);
+  display:flex;align-items:stretch;overflow:hidden;
+}
+.tl-seg{
+  position:absolute;top:0;bottom:0;background:var(--seg);
+  border-left:1px solid var(--panel-solid);
+}
+.tl-seg{min-width:3px}
+.tl-seg.on{background:var(--accent)}
+.tl-head{
+  position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);
+  left:0;z-index:2;
+}
+.tl-scale{
+  display:flex;justify-content:space-between;margin-top:5px;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:9.5px;
+  letter-spacing:.1em;color:var(--ink-faint);font-variant-numeric:tabular-nums;
+}
+#tlPhase{margin:9px 0 0 !important;font-size:12.5px;line-height:1.45;color:var(--ink-dim);max-width:none !important}
+
+/* ---------- site picker ---------- */
+#sites{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:94px;
+  max-width:calc(100vw - 32px);
+  background:var(--panel);border:1px solid var(--hairline);
+  backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+  padding:9px 12px 10px;display:flex;flex-direction:column;gap:7px;
+}
+.chips{display:flex;gap:1px;background:var(--hairline);overflow-x:auto;overscroll-behavior-x:contain}
+.chip{
+  appearance:none;border:0;background:var(--panel-solid);color:var(--ink-dim);
+  font-family:inherit;font-size:12px;cursor:pointer;white-space:nowrap;
+  padding:7px 12px 8px;display:flex;flex-direction:column;gap:2px;text-align:left;
+  border-bottom:2px solid transparent;
+}
+.chip b{font-weight:500;color:inherit}
+.chip i{
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-style:normal;font-size:9px;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-faint);
+}
+.chip:hover{color:var(--ink)}
+.chip[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.chip[aria-pressed="true"] i{color:var(--accent)}
 
 /* ---------- legend ---------- */
 #legend{
@@ -243,9 +304,10 @@ body{
   #legend{top:16px;right:16px}
   #hint{left:16px;bottom:16px}
 }
-@media (max-width:820px){
+@media (max-width:900px){
   #dock{flex-wrap:wrap}
   .speed{flex:1 1 100%;justify-content:center;padding:8px 15px}
+  #sites{bottom:132px}
 }
 
 /* Narrow screens: everything the wide layout floats in three corners becomes
@@ -254,14 +316,19 @@ body{
   #topstack{
     display:flex;flex-direction:column;gap:8px;
     position:fixed;top:10px;left:10px;right:10px;
-    max-height:calc(100vh - 168px);
-    max-height:calc(100dvh - 168px);
+    max-height:calc(100vh - 178px);
+    max-height:calc(100dvh - 178px);
     overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
     pointer-events:none;
   }
   #topstack > *{pointer-events:auto}
 
-  #panel,#legend,#hint{position:static;width:auto;max-width:none;inset:auto}
+  #panel,#legend,#hint,#sites{position:static;width:auto;max-width:none;inset:auto;transform:none}
+  #sites{order:1;padding:9px 12px 10px}
+  #legend{order:2}
+  #hint{order:3}
+  .chip{padding:7px 9px 8px}
+  #dock .group:first-child{display:grid;grid-template-columns:1fr 1fr}
   #panel h1{font-size:21px;margin-top:5px}
   #panel p{margin:8px 14px 12px;font-size:12.5px;max-width:none}
   .panel-head{padding:12px 14px 0}
@@ -275,6 +342,10 @@ body{
   #hint{padding:0 2px;line-height:1.6;font-size:9.5px}
 
   #dock{left:10px;right:10px;bottom:10px;transform:none;max-width:none}
+  body[data-view="0"] #topstack{
+    max-height:calc(100vh - 214px);
+    max-height:calc(100dvh - 214px);
+  }
   .group{flex:1 1 100%;flex-wrap:wrap}
   .rung{flex:1 1 0;min-width:0;padding:8px 8px 7px}
   .btn{flex:1 1 0;min-width:0;padding:10px 12px}
@@ -297,6 +368,7 @@ body{
   .btn{flex:0 1 auto;padding:0 14px}
   .speed{flex:0 1 auto;padding:0 14px;justify-content:flex-start}
   #speed{width:92px;flex:0 0 auto}
+  #sites{order:1}
 }
 
 /* Readouts go 4-up on short screens only when the column can fit four labels. */
@@ -322,9 +394,14 @@ body{
       <dl class="readout">
         <div class="cell"><dt>Elapsed</dt><dd id="rTime">00:00.0</dd></div>
         <div class="cell"><dt>Rate</dt><dd id="rRate">1.00&times;</dd></div>
-        <div class="cell"><dt>Field</dt><dd id="rField">~1 m</dd></div>
+        <div class="cell"><dt id="rFieldLabel">Field</dt><dd id="rField">~1 m</dd></div>
         <div class="cell"><dt id="rEventLabel">Deliveries</dt><dd id="rEvents">0</dd></div>
       </dl>
+      <div id="timeline" hidden>
+        <div class="tl-track" id="tlTrack"><div class="tl-head" id="tlHead"></div></div>
+        <div class="tl-scale"><span>T+0</span><span id="tlEnd"></span></div>
+        <p id="tlPhase"></p>
+      </div>
     </section>
 
     <aside id="legend">
@@ -333,16 +410,22 @@ body{
     </aside>
 
     <p id="hint">
-      <span class="pointer-only">Drag to orbit &middot; Scroll to zoom &middot; Hover to label<br>Keys 1&ndash;3 scale &middot; Space play &middot; R reset</span>
-      <span class="touch-only">Drag to orbit &middot; Pinch to zoom &middot; Tap to label</span>
+      <span class="pointer-only">Drag to orbit &middot; Scroll to zoom<br>Hover to label &middot; Click a site<br>Keys 1&ndash;4 scale &middot; Space play &middot; R reset</span>
+      <span class="touch-only">Drag to orbit &middot; Pinch to zoom<br>Tap to label or to pick a site</span>
     </p>
+
+    <div id="sites" hidden>
+      <span class="eyebrow">Administration site</span>
+      <div class="chips" id="chips" role="group" aria-label="Administration site"></div>
+    </div>
   </div>
 
   <div id="dock">
     <div class="group" role="group" aria-label="Scale">
-      <button class="rung" id="v0" aria-pressed="true"><span class="n">01</span><span class="l">Systemic</span><span class="m">~1 m</span></button>
-      <button class="rung" id="v1" aria-pressed="false"><span class="n">02</span><span class="l">Cellular</span><span class="m">~10 µm</span></button>
-      <button class="rung" id="v2" aria-pressed="false"><span class="n">03</span><span class="l">Molecular</span><span class="m">~1 nm</span></button>
+      <button class="rung" id="v0" aria-pressed="true"><span class="n">01</span><span class="l">Body</span><span class="m">~1.7 m</span></button>
+      <button class="rung" id="v1" aria-pressed="false"><span class="n">02</span><span class="l">Systemic</span><span class="m">~5 mm</span></button>
+      <button class="rung" id="v2" aria-pressed="false"><span class="n">03</span><span class="l">Cellular</span><span class="m">~10 µm</span></button>
+      <button class="rung" id="v3" aria-pressed="false"><span class="n">04</span><span class="l">Molecular</span><span class="m">~1 nm</span></button>
     </div>
     <div class="group">
       <button class="btn" id="play" data-on="true" aria-label="Pause animation"><svg id="playIcon" width="9" height="11" viewBox="0 0 9 11" aria-hidden="true"><rect x="0" y="0" width="3" height="11" fill="currentColor"/><rect x="6" y="0" width="3" height="11" fill="currentColor"/></svg><span id="playLabel">Pause</span></button>
@@ -368,21 +451,27 @@ body{
   var C = {
     blood: 0xE24B58, vessel: 0x8E2733, cell: 0x5A9BE0, cellDeep: 0x2D5F94,
     receptor: 0x43C68A, drug: 0xFF7E52, nucleus: 0x38668F,
-    H: 0xF2F4F6, Cc: 0x8B929B, O: 0xE24B58, N: 0x5A9BE0
+    H: 0xF2F4F6, Cc: 0x8B929B, O: 0xE24B58, N: 0x5A9BE0,
+    contrast: 0xFFE08A, vein: 0x3F7CBE, ink: 0xC7D3DE
   };
 
   var VIEWS = [{
-    eyebrow: 'Scale 01 — Systemic', title: 'Through the bloodstream',
+    eyebrow: 'Scale 01 — Whole body', title: 'Contrast route',
+    body: '', field: '~1.7 m', eventLabel: 'Phase', dist: 30, phi: 1.5, theta: 0.14,
+    accent: C.contrast,
+    keys: [['--contrast', 'Contrast bolus', 'radiodense · bright on CT'], ['--vein', 'Administration route', 'first pass'], ['--cell', 'Organs', 'enhance on their own curve']]
+  }, {
+    eyebrow: 'Scale 02 — Systemic', title: 'Through the bloodstream',
     body: 'Drug molecules travel through the bloodstream to target cells across the body. Speed of distribution depends on injection site and blood flow.',
-    field: '~1 m', eventLabel: 'Deliveries', dist: 26, phi: 1.32, theta: 0.30, accent: C.blood,
+    field: '~5 mm', eventLabel: 'Deliveries', dist: 26, phi: 1.32, theta: 0.30, accent: C.blood,
     keys: [['--blood', 'Bloodstream', 'vessel lumen'], ['--cell', 'Target cells', 'muscle · fat · liver'], ['--drug', 'Drug molecules', 'in circulation']]
   }, {
-    eyebrow: 'Scale 02 — Cellular', title: 'At the membrane',
+    eyebrow: 'Scale 03 — Cellular', title: 'At the membrane',
     body: 'Drug molecules approach the cell membrane. Receptors (green) on the surface await binding. Each drug targets specific receptor types.',
     field: '~10 µm', eventLabel: 'Bindings', dist: 21, phi: 1.28, theta: 0.55, accent: C.receptor,
     keys: [['--cell', 'Cell membrane', 'lipid bilayer'], ['--cell', 'Nucleus', 'cell core'], ['--receptor', 'Receptors', '14 binding sites'], ['--drug', 'Drug molecules', 'approaching']]
   }, {
-    eyebrow: 'Scale 03 — Molecular', title: 'The binding shape',
+    eyebrow: 'Scale 04 — Molecular', title: 'The binding shape',
     body: "At the atomic scale, the drug's chemical structure determines which receptors it binds to. Shape, charge, and functional groups all matter.",
     field: '~1 nm', eventLabel: 'Bonds', dist: 15, phi: 1.24, theta: 0.42, accent: C.drug,
     keys: [['--drug', 'Drug molecule', 'core scaffold'], ['--ink', 'Hydrogen', 'H'], ['--ink-dim', 'Carbon', 'C'], ['--blood', 'Oxygen', 'O'], ['--cell', 'Nitrogen', 'N']]
@@ -402,7 +491,7 @@ body{
 
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var state = {
-    view: 0, playing: !reduced, speed: 1, t: 0, events: 0,
+    view: 0, site: 0, clinT: 0, playing: !reduced, speed: 1, t: 0, events: 0,
     orbit: { theta: 0.30, phi: 1.32, radius: 26 },
     goal: { theta: 0.30, phi: 1.32, radius: 26 },
     parallax: new THREE.Vector2(0, 0), parallaxGoal: new THREE.Vector2(0, 0)
@@ -889,7 +978,448 @@ body{
     };
   }
 
-  var BUILDERS = [buildSystemic, buildCellular, buildMolecular];
+  /* ================= view 01 · whole body · contrast route =================
+
+     Each site carries three things: the first-pass path the bolus physically
+     rides, a set of organ time-attenuation curves (peak + width, in clinical
+     seconds) that carry the story after the first pass disperses, and the
+     clinical phase windows a radiographer would actually scan in.
+     ======================================================================== */
+
+  function V(x, y, z) { return new THREE.Vector3(x, y, z); }
+
+  // Patient faces +Z, so patient-right is -X (the side the liver sits on).
+  var ORGANS = [
+    { id: 'brain', key: 'brain', p: [0, 8.7, 0], r: 1.12, label: 'Brain', sub: 'carotid & vertebral supply' },
+    { id: 'rheart', key: 'rheart', p: [-0.45, 4.05, 0.5], r: 0.5, label: 'Right heart', sub: 'RA / RV · pre-pulmonary' },
+    { id: 'lheart', key: 'lheart', p: [0.5, 3.6, 0.38], r: 0.48, label: 'Left heart', sub: 'LA / LV · systemic pump' },
+    { id: 'lungr', key: 'lungs', p: [-1.5, 4.7, 0], r: 0.95, label: 'Right lung', sub: 'pulmonary capillary bed' },
+    { id: 'lungl', key: 'lungs', p: [1.5, 4.7, 0], r: 0.95, label: 'Left lung', sub: 'pulmonary capillary bed' },
+    { id: 'liver', key: 'liver', p: [-1.1, 1.95, 0.35], r: 0.92, label: 'Liver', sub: 'dual supply · portal + arterial' },
+    { id: 'kidr', key: 'kidneys', p: [-0.95, 0.55, -0.6], r: 0.4, label: 'Right kidney', sub: 'filters ~90% of the dose' },
+    { id: 'kidl', key: 'kidneys', p: [0.95, 0.55, -0.6], r: 0.4, label: 'Left kidney', sub: 'filters ~90% of the dose' },
+    { id: 'gut', key: 'gut', p: [0.1, 0.7, 0.4], r: 0.8, label: 'Bowel', sub: 'lumen · not vascular' },
+    { id: 'bladder', key: 'bladder', p: [0, -1.45, 0.32], r: 0.4, label: 'Bladder', sub: 'excreted contrast collects' },
+    { id: 'cord', key: 'cord', p: [0, 3.0, -0.62], r: 0.3, label: 'Thecal sac', sub: 'CSF around the cord', tall: 7.6 }
+  ];
+
+  var SITES = [{
+    access: '18–20 G', id: 'antecubital',
+    name: 'Right antecubital vein',
+    chip: 'R. antecubital',
+    route: 'IV periph.',
+    spec: '18–20 G · 4–5 mL/s',
+    blurb: 'The default access for contrast-enhanced CT. A short, straight run to the superior vena cava keeps the bolus tight. The right arm is preferred: the left brachiocephalic vein crosses the midline in front of the aortic arch, where dense contrast can streak across the very anatomy being imaged.',
+    tmax: 240, spread: 1.5, timeScale: 4.4,
+    path: [
+      [-3.3, 2.6, 0.35, 0, 'Antecubital fossa'],
+      [-2.85, 4.4, 0.3, 2, 'Axillary vein'],
+      [-1.75, 5.9, 0.18, 3.5, 'Subclavian vein'],
+      [-0.75, 6.0, 0.05, 5, 'Brachiocephalic vein'],
+      [-0.42, 5.0, 0.3, 6.5, 'Superior vena cava'],
+      [-0.45, 4.05, 0.5, 8, 'Right heart'],
+      [-1.5, 4.7, 0, 10.5, 'Pulmonary arteries'],
+      [0.5, 3.6, 0.38, 14, 'Left heart'],
+      [0.15, 5.5, -0.15, 17, 'Aortic arch'],
+      [0.15, 2.0, -0.5, 21, 'Thoracic aorta'],
+      [0.15, -0.25, -0.5, 25, 'Abdominal aorta'],
+      [-0.7, -1.5, -0.3, 29, 'Iliac bifurcation']
+    ],
+    enhance: {
+      rheart: [8, 4, 1], lungs: [11, 4.5, 1], lheart: [15, 4, 1],
+      brain: [27, 11, .8], liver: [70, 26, 1], gut: [80, 30, .45],
+      kidneys: [105, 34, 1], bladder: [212, 62, .9]
+    },
+    excretion: true,
+    phases: [
+      [0, 6, 'Venous', 'The bolus runs arm → subclavian → SVC. Nothing is enhanced yet; this is dead time the scanner waits out.'],
+      [6, 12, 'Pulmonary', 'CTPA window. Right heart and pulmonary arteries opacify before the contrast has reached the systemic side.'],
+      [15, 35, 'Arterial', 'CTA window. Aorta at peak — typically triggered by watching attenuation in the aorta rather than a fixed delay.'],
+      [60, 80, 'Portal', 'Liver parenchyma peaks, fed mostly by the portal vein. Hypovascular metastases stand out dark against it.'],
+      [90, 120, 'Nephro.', 'Renal cortex and medulla enhance uniformly. The kidneys are now clearing the dose from the blood.'],
+      [180, 240, 'Excretory', 'Filtered contrast reaches the collecting systems, ureters and bladder.']
+    ]
+  }, {
+    access: '22 G', id: 'hand',
+    name: 'Dorsal hand vein',
+    chip: 'Dorsal hand',
+    route: 'IV periph.',
+    spec: '22 G · 1.5–2 mL/s',
+    blurb: 'Often the only vein available, and it costs you bolus quality. A 22 G cannula caps the injection rate, so the same volume goes in over a longer time: the bolus arrives later, wider and lower. Arterial peak is blunted, which matters most for CTA.',
+    tmax: 240, spread: 3.6, timeScale: 4.4,
+    path: [
+      [-4.0, -1.8, 0.25, 0, 'Dorsal hand vein'],
+      [-3.9, -0.6, 0.28, 2.5, 'Wrist'],
+      [-3.55, 1.3, 0.32, 5.5, 'Forearm veins'],
+      [-3.3, 2.6, 0.35, 8, 'Antecubital fossa'],
+      [-2.85, 4.4, 0.3, 11, 'Axillary vein'],
+      [-1.75, 5.9, 0.18, 13, 'Subclavian vein'],
+      [-0.42, 5.0, 0.3, 15.5, 'Superior vena cava'],
+      [-0.45, 4.05, 0.5, 17.5, 'Right heart'],
+      [-1.5, 4.7, 0, 20.5, 'Pulmonary arteries'],
+      [0.5, 3.6, 0.38, 24, 'Left heart'],
+      [0.15, 5.5, -0.15, 27, 'Aortic arch'],
+      [0.15, 2.0, -0.5, 32, 'Thoracic aorta'],
+      [0.15, -0.25, -0.5, 37, 'Abdominal aorta']
+    ],
+    enhance: {
+      rheart: [18, 7, .85], lungs: [21, 7, .85], lheart: [25, 7, .8],
+      brain: [38, 15, .6], liver: [80, 30, .95], gut: [90, 34, .4],
+      kidneys: [115, 38, .95], bladder: [220, 62, .85]
+    },
+    excretion: true,
+    phases: [
+      [0, 14, 'Venous', 'A long forearm run before the bolus even reaches the chest.'],
+      [16, 24, 'Pulmonary', 'Right heart opacifies roughly 10 s later than from the antecubital fossa.'],
+      [25, 50, 'Arterial', 'Peak is later, broader and lower. A fixed scan delay tuned for an 18 G cannula will miss it.'],
+      [70, 95, 'Portal', 'Parenchymal phases are far more forgiving of a blunt bolus than CTA is.'],
+      [100, 135, 'Nephro.', 'Renal parenchyma enhances uniformly.'],
+      [190, 240, 'Excretory', 'Collecting systems and bladder fill.']
+    ]
+  }, {
+    access: 'Power port', id: 'port',
+    name: 'Chest port / central line',
+    chip: 'Chest port',
+    route: 'Central',
+    spec: 'Power-injectable · tip at cavoatrial junction',
+    blurb: 'The catheter tip already sits where a peripheral bolus is trying to get to, so transit time nearly vanishes and the bolus stays tight. The catch: only a power-injectable port may be pressure-injected, and its rate ceiling is usually lower than a good peripheral 18 G.',
+    tmax: 240, spread: 1.1, timeScale: 4.4,
+    path: [
+      [-1.95, 5.35, 0.8, 0, 'Port reservoir'],
+      [-1.2, 6.0, 0.5, 0.7, 'Tunnelled catheter'],
+      [-0.42, 5.2, 0.28, 1.3, 'SVC · catheter tip'],
+      [-0.45, 4.05, 0.5, 2.2, 'Right heart'],
+      [-1.5, 4.7, 0, 4.5, 'Pulmonary arteries'],
+      [0.5, 3.6, 0.38, 7.5, 'Left heart'],
+      [0.15, 5.5, -0.15, 10, 'Aortic arch'],
+      [0.15, 2.0, -0.5, 13.5, 'Thoracic aorta'],
+      [0.15, -0.25, -0.5, 17, 'Abdominal aorta'],
+      [-0.7, -1.5, -0.3, 20, 'Iliac bifurcation']
+    ],
+    enhance: {
+      rheart: [2.5, 2.2, 1], lungs: [5, 2.8, 1], lheart: [8, 3, 1],
+      brain: [20, 10, .8], liver: [62, 24, 1], gut: [72, 28, .45],
+      kidneys: [96, 32, 1], bladder: [204, 60, .9]
+    },
+    excretion: true,
+    phases: [
+      [0, 2, 'Catheter', 'Straight from the reservoir into the SVC — the arm transit is skipped entirely.'],
+      [2, 7, 'Pulmonary', 'Right heart opacifies within a couple of seconds of the injector starting.'],
+      [10, 26, 'Arterial', 'Tightest bolus of any route here: everything arrives ~6 s earlier than from the antecubital fossa.'],
+      [55, 75, 'Portal', 'Liver at peak.'],
+      [85, 115, 'Nephro.', 'Renal parenchyma enhances.'],
+      [175, 240, 'Excretory', 'Collecting systems fill.']
+    ]
+  }, {
+    access: '4–5 Fr', id: 'femoral',
+    name: 'Right femoral artery',
+    chip: 'Femoral artery',
+    route: 'Intra-art.',
+    spec: 'Catheter angiography · 4–5 Fr sheath',
+    blurb: 'Catheter angiography works the other way round: puncture the groin, run the catheter retrograde up the aorta, then inject downstream. There is no venous or pulmonary transit to dilute the bolus, so vessels opacify almost instantly and the dose is a fraction of an IV CT study.',
+    tmax: 60, spread: 0.9, timeScale: 1.1,
+    path: [
+      [-1.0, -2.2, 0.55, 0, 'Femoral puncture'],
+      [-0.7, -1.5, -0.15, 0.7, 'External iliac artery'],
+      [0.05, -0.4, -0.5, 1.2, 'Aortic bifurcation'],
+      [0.15, 0.6, -0.5, 1.6, 'Catheter tip · abdominal aorta'],
+      [0.15, -0.3, -0.5, 2.6, 'Aorta · antegrade flow'],
+      [-0.7, -1.5, -0.3, 3.6, 'Right common iliac'],
+      [-1.05, -2.9, 0.3, 5, 'Common femoral artery'],
+      [-1.2, -6.6, 0.2, 8, 'Superficial femoral artery']
+    ],
+    enhance: {
+      kidneys: [3, 2.6, 1], gut: [4, 3, .7],
+      rheart: [24, 8, .45], lungs: [27, 8, .45], lheart: [31, 8, .4],
+      liver: [34, 14, .5], bladder: [50, 18, .5]
+    },
+    excretion: false,
+    phases: [
+      [0, 1.6, 'Catheter', 'Retrograde from the groin puncture up to the tip position — the catheter travels against the flow, the contrast will not.'],
+      [1.6, 8, 'Arterial', 'Immediate opacification. No pulmonary bed in the way means no dilution and no delay.'],
+      [8, 20, 'Parenchymal', 'Branch vessels and organ blush as contrast reaches the capillary beds.'],
+      [20, 60, 'Recirc.', 'What returns through the veins makes a second pass — much fainter, because now it has been through the lungs and the whole blood volume.']
+    ]
+  }, {
+    access: 'L3–4', id: 'intrathecal',
+    name: 'Lumbar intrathecal',
+    chip: 'Lumbar puncture',
+    route: 'Intrathecal',
+    spec: 'L3–4 · non-ionic iso-osmolar only',
+    blurb: 'Myelography. The needle enters the thecal sac below the end of the cord and the contrast mixes with CSF — it never enters the bloodstream on the first pass, and no organ enhances. It moves by patient positioning and CSF pulsation, over minutes rather than seconds. Only non-ionic, low- or iso-osmolar agents may be given intrathecally; ionic contrast here causes fatal seizures.',
+    tmax: 1800, spread: 9, timeScale: 33,
+    path: [
+      [0, -0.95, -0.95, 0, 'L3–4 interspace'],
+      [0, -0.3, -0.75, 60, 'Lumbar thecal sac'],
+      [0, 1.2, -0.68, 220, 'Conus / cauda equina'],
+      [0, 3.2, -0.62, 420, 'Thoracic canal'],
+      [0, 5.6, -0.58, 700, 'Cervical canal'],
+      [0, 7.4, -0.35, 1000, 'Foramen magnum'],
+      [0, 8.5, -0.05, 1250, 'Basal cisterns']
+    ],
+    enhance: { cord: [420, 420, 1], brain: [1150, 480, .55] },
+    excretion: false,
+    phases: [
+      [0, 120, 'Injection', 'Needle in the lumbar thecal sac, below the conus. Contrast mixes with CSF rather than blood.'],
+      [120, 600, 'Ascent', 'Movement comes from tilting the table and from CSF pulsation — there is no pump behind it.'],
+      [600, 1200, 'Cervical', 'Contrast reaches the cervical canal and the basal cisterns.'],
+      [1200, 1800, 'Clearance', 'Resorbed into the venous system across the arachnoid granulations.']
+    ]
+  }, {
+    access: 'Enteral', id: 'oral',
+    name: 'Oral (swallowed)',
+    chip: 'Oral',
+    route: 'Enteral',
+    spec: 'Dilute iodinated or barium suspension',
+    blurb: 'The only route here that never touches a vessel. Swallowed contrast opacifies the bowel lumen from the inside and is not absorbed — no organ enhances, and timing is set by gut transit rather than circulation. Iodinated agents are used instead of barium wherever perforation or aspiration is a risk.',
+    tmax: 3600, spread: 14, timeScale: 66,
+    path: [
+      [0, 8.0, 0.55, 0, 'Mouth'],
+      [0, 6.6, 0.1, 8, 'Pharynx'],
+      [0.05, 5.0, -0.15, 20, 'Oesophagus'],
+      [-0.5, 2.4, 0.4, 60, 'Stomach'],
+      [0.35, 1.5, 0.25, 620, 'Duodenum'],
+      [0, 0.7, 0.4, 1500, 'Jejunum / ileum'],
+      [0.95, 0.15, 0.3, 2600, 'Caecum'],
+      [0.2, -0.9, 0.35, 3300, 'Colon']
+    ],
+    enhance: { gut: [1900, 1250, 1] },
+    excretion: false,
+    phases: [
+      [0, 60, 'Swallow', 'Oesophageal transit takes seconds; everything after this is measured in minutes.'],
+      [60, 900, 'Gastric', 'Contrast pools in the stomach and empties gradually.'],
+      [900, 2400, 'Small bowel', 'Loops opacify in sequence as the column moves distally.'],
+      [2400, 3600, 'Colon', 'Reaches the caecum and colon. None of it has entered the blood.']
+    ]
+  }];
+
+  function buildRoute() {
+    var scene = new THREE.Scene();
+    lights(scene);
+    var hover = [];
+    var site = SITES[state.site];
+    var dark = isDark();
+    var BODY = dark ? 0x7FA8C9 : 0x51789C;
+
+    /* ---- schematic body ---- */
+    var bodyMat = new THREE.MeshStandardMaterial({
+      color: BODY, transparent: true, opacity: dark ? 0.06 : 0.09,
+      roughness: 0.85, depthWrite: false, side: THREE.DoubleSide
+    });
+    var edgeMat = new THREE.LineBasicMaterial({
+      color: BODY, transparent: true, opacity: dark ? 0.26 : 0.34
+    });
+
+    function piece(geo, x, y, z, sz) {
+      var m = new THREE.Mesh(geo, bodyMat);
+      m.position.set(x, y, z);
+      if (sz) m.scale.set(sz[0], sz[1], sz[2]);
+      scene.add(m);
+      var e = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 24), edgeMat);
+      e.position.copy(m.position); e.scale.copy(m.scale);
+      scene.add(e);
+      return m;
+    }
+    function limb(a, b, r) {
+      var A = V(a[0], a[1], a[2]), B = V(b[0], b[1], b[2]);
+      var len = A.distanceTo(B);
+      var g = new THREE.CylinderGeometry(r, r * 0.86, len, 8, 1, true);
+      var m = new THREE.Mesh(g, bodyMat);
+      m.position.copy(A).add(B).multiplyScalar(0.5);
+      m.quaternion.setFromUnitVectors(V(0, 1, 0), B.clone().sub(A).normalize());
+      scene.add(m);
+      var e = new THREE.LineSegments(new THREE.EdgesGeometry(g, 24), edgeMat);
+      e.position.copy(m.position); e.quaternion.copy(m.quaternion);
+      scene.add(e);
+    }
+
+    piece(new THREE.SphereGeometry(1.45, 18, 14), 0, 8.7, 0, [0.86, 1, 0.9]);
+    piece(new THREE.CylinderGeometry(0.5, 0.62, 1.1, 10, 1, true), 0, 7.35, 0);
+    piece(new THREE.CylinderGeometry(1.95, 1.5, 6.6, 14, 1, true), 0, 3.5, 0, [1, 1, 0.62]);
+    piece(new THREE.CylinderGeometry(1.5, 1.35, 1.8, 12, 1, true), 0, -0.7, 0, [1, 1, 0.62]);
+    [-1, 1].forEach(function (s) {
+      limb([s * 2.0, 6.15, 0], [s * 3.3, 2.6, 0.2], 0.42);
+      limb([s * 3.3, 2.6, 0.2], [s * 3.95, -0.7, 0.25], 0.34);
+      limb([s * 3.95, -0.7, 0.25], [s * 4.05, -1.85, 0.25], 0.26);
+      limb([s * 0.95, -1.5, 0], [s * 1.25, -7.2, 0.1], 0.58);
+      limb([s * 1.25, -7.2, 0.1], [s * 1.4, -12.2, 0.1], 0.42);
+    });
+
+    /* ---- organs ---- */
+    var organs = [];
+    ORGANS.forEach(function (o) {
+      var geo = o.tall
+        ? new THREE.CylinderGeometry(o.r, o.r * 0.75, o.tall, 10)
+        : new THREE.IcosahedronGeometry(o.r, 1);
+      var mat = new THREE.MeshStandardMaterial({
+        color: C.cell, emissive: C.contrast, emissiveIntensity: 0,
+        roughness: 0.5, metalness: 0.08, transparent: true, opacity: 0.34
+      });
+      var m = new THREE.Mesh(geo, mat);
+      m.position.set(o.p[0], o.p[1], o.p[2]);
+      m.userData.label = o.label; m.userData.sub = o.sub;
+      m.userData.key = o.key; m.userData.base = 0.34;
+      scene.add(m); hover.push(m); organs.push(m);
+      var w = outline(geo.clone(), C.cell, 0.22);
+      w.position.copy(m.position); scene.add(w);
+      m.userData.wire = w;
+    });
+
+    /* ---- the route itself ---- */
+    var pts = site.path.map(function (w) { return V(w[0], w[1], w[2]); });
+    var curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.4);
+    var vessel = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 140, 0.085, 7, false),
+      new THREE.MeshStandardMaterial({
+        color: site.route === 'Intra-art.' ? C.blood : (site.id === 'oral' || site.id === 'intrathecal' ? C.receptor : C.vein),
+        transparent: true, opacity: 0.45, roughness: 0.5, emissive: 0x000000
+      })
+    );
+    vessel.userData.label = site.name;
+    vessel.userData.sub = site.route + ' · ' + site.spec;
+    scene.add(vessel); hover.push(vessel);
+
+    // waypoint pips, each labelled with the anatomy it marks
+    site.path.forEach(function (w, i) {
+      if (i === 0) return;
+      var pip = new THREE.Mesh(
+        new THREE.SphereGeometry(0.11, 10, 8),
+        new THREE.MeshStandardMaterial({
+          color: C.ink, roughness: 0.4, transparent: true, opacity: 0.65
+        })
+      );
+      pip.position.set(w[0], w[1], w[2]);
+      pip.userData.label = w[4];
+      pip.userData.sub = 'T+' + w[3] + ' s';
+      scene.add(pip); hover.push(pip);
+    });
+
+    // every administration site is marked on the body and can be clicked
+    SITES.forEach(function (st, i) {
+      var on = i === state.site;
+      var mk = new THREE.Mesh(
+        new THREE.SphereGeometry(on ? 0.21 : 0.15, 14, 12),
+        new THREE.MeshStandardMaterial({
+          color: on ? C.contrast : C.ink,
+          emissive: on ? C.contrast : 0x000000, emissiveIntensity: on ? 0.75 : 0,
+          roughness: 0.4, transparent: true, opacity: on ? 1 : 0.5
+        })
+      );
+      mk.position.set(st.path[0][0], st.path[0][1], st.path[0][2]);
+      mk.userData.label = st.name;
+      mk.userData.sub = on ? 'selected · ' + st.spec : 'click to inject here';
+      mk.userData.siteIndex = i;
+      scene.add(mk); hover.push(mk);
+      if (on) {
+        var ring = new THREE.Mesh(
+          new THREE.TorusGeometry(0.42, 0.022, 6, 30),
+          new THREE.MeshBasicMaterial({ color: C.contrast, transparent: true, opacity: 0.7 })
+        );
+        ring.position.copy(mk.position);
+        scene.add(ring);
+        mk.userData.ring = ring;
+      }
+    });
+
+    /* ---- excretory trickle (kidneys → ureters → bladder) ---- */
+    var excretion = null;
+    if (site.excretion) {
+      excretion = new THREE.Group();
+      [-1, 1].forEach(function (s) {
+        var uc = new THREE.CatmullRomCurve3([
+          V(s * 0.95, 0.4, -0.6), V(s * 0.7, -0.4, -0.45), V(s * 0.3, -1.1, -0.1), V(0, -1.45, 0.32)
+        ]);
+        excretion.add(new THREE.Mesh(
+          new THREE.TubeGeometry(uc, 40, 0.05, 6, false),
+          new THREE.MeshStandardMaterial({
+            color: C.contrast, emissive: C.contrast, emissiveIntensity: 0.5,
+            transparent: true, opacity: 0, roughness: 0.4
+          })
+        ));
+      });
+      scene.add(excretion);
+    }
+
+    /* ---- the bolus ---- */
+    var N = 150;
+    var bpos = new Float32Array(N * 3);
+    var bgeo = new THREE.BufferGeometry();
+    bgeo.setAttribute('position', new THREE.BufferAttribute(bpos, 3));
+    var bolus = new THREE.Points(bgeo, new THREE.PointsMaterial({
+      color: C.contrast, size: 0.3, transparent: true, opacity: 0.95,
+      depthWrite: false, blending: THREE.AdditiveBlending
+    }));
+    bolus.frustumCulled = false;
+    scene.add(bolus);
+
+    var jitter = [];
+    for (var j = 0; j < N; j++) {
+      jitter.push([(Math.random() - 0.5) * 0.13, (Math.random() - 0.5) * 0.13, (Math.random() - 0.5) * 0.13]);
+    }
+
+    var last = site.path[site.path.length - 1][3];
+    var seg = site.path.length - 1;
+    var tmp = new THREE.Vector3();
+
+    // clinical time -> curve parameter, using the waypoints' own arrival times
+    function uAt(T) {
+      if (T <= site.path[0][3]) return 0;
+      if (T >= last) return 1;
+      for (var i = 0; i < seg; i++) {
+        var a = site.path[i][3], b = site.path[i + 1][3];
+        if (T <= b) return (i + (T - a) / (b - a)) / seg;
+      }
+      return 1;
+    }
+
+    function gauss(T, peak, width) {
+      var z = (T - peak) / width;
+      return Math.exp(-z * z);
+    }
+
+    return {
+      scene: scene, hover: hover, isRoute: true, site: site,
+      update: function (dt) {
+        state.clinT += dt * site.timeScale;
+        if (state.clinT > site.tmax) { state.clinT = 0; state.events = 0; }
+        var T = state.clinT;
+
+        // bolus: each particle trails the head by a slice of the injection duration
+        for (var i = 0; i < N; i++) {
+          var Ti = T - (i / N) * site.spread;
+          var u = uAt(Ti < 0 ? 0 : Ti);
+          curve.getPoint(u, tmp);
+          bpos[i * 3] = tmp.x + jitter[i][0];
+          bpos[i * 3 + 1] = tmp.y + jitter[i][1];
+          bpos[i * 3 + 2] = tmp.z + jitter[i][2];
+        }
+        bgeo.attributes.position.needsUpdate = true;
+        // first pass disperses into the capillary beds once it runs out of path
+        var fade = T <= last ? 1 : Math.max(0, 1 - (T - last) / (site.tmax * 0.12));
+        bolus.material.opacity = 0.95 * fade;
+
+        // organ time-attenuation curves carry the story after that
+        organs.forEach(function (m) {
+          var e = site.enhance[m.userData.key];
+          var v = e ? gauss(T, e[0], e[1]) * e[2] : 0;
+          m.material.emissiveIntensity = v * 1.7;
+          m.material.opacity = m.userData.base + v * 0.5;
+          m.userData.wire.material.opacity = 0.22 + v * 0.35;
+          var s = 1 + v * 0.07;
+          m.scale.setScalar(s); m.userData.wire.scale.setScalar(s);
+        });
+
+        if (excretion) {
+          var ev = gauss(T, site.enhance.bladder[0] - 30, 70);
+          excretion.children.forEach(function (c) { c.material.opacity = ev * 0.8; });
+        }
+
+        vessel.material.opacity = 0.45 + (T < last ? 0.2 : 0) * fade;
+      }
+    };
+  }
+
+  var BUILDERS = [buildRoute, buildSystemic, buildCellular, buildMolecular];
 
   /* ---------------- lifecycle ---------------- */
   function disposeWorld(w) {
@@ -916,10 +1446,86 @@ body{
       state.goal.phi = v.phi;
     }
     paintPanel(v);
-    for (var b = 0; b < 3; b++) {
+    for (var b = 0; b < BUILDERS.length; b++) {
       document.getElementById('v' + b).setAttribute('aria-pressed', String(b === i));
     }
+    var route = !!world.isRoute;
+    document.getElementById('sites').hidden = !route;
+    document.getElementById('timeline').hidden = !route;
+    document.body.setAttribute('data-view', String(i));
+    if (route) applyRoutePanel();
     hideTip();
+  }
+
+  /* ---------------- contrast route panel ---------------- */
+  function applyRoutePanel() {
+    var site = SITES[state.site];
+    document.getElementById('peyebrow').textContent = 'Scale 01 — ' + site.route;
+    document.getElementById('ptitle').textContent = site.name;
+    document.getElementById('pbody').textContent = site.blurb;
+    document.getElementById('rFieldLabel').textContent = 'Access';
+    document.getElementById('rField').textContent = site.access;
+    renderTimeline(site);
+    lastPhase = -1;
+    for (var i = 0; i < SITES.length; i++) {
+      var el = document.getElementById('chip' + i);
+      if (el) el.setAttribute('aria-pressed', String(i === state.site));
+    }
+  }
+
+  function renderSites() {
+    var wrap = document.getElementById('chips');
+    wrap.innerHTML = '';
+    SITES.forEach(function (st, i) {
+      var b = document.createElement('button');
+      b.className = 'chip'; b.id = 'chip' + i;
+      b.setAttribute('aria-pressed', String(i === state.site));
+      var tag = document.createElement('i'); tag.textContent = st.route;
+      var nm = document.createElement('b'); nm.textContent = st.chip;
+      b.appendChild(tag); b.appendChild(nm);
+      b.addEventListener('click', function () { selectSite(i); });
+      wrap.appendChild(b);
+    });
+  }
+
+  function selectSite(i) {
+    if (i === state.site) return;
+    state.site = i;
+    state.clinT = 0;
+    loadView(0, true);
+  }
+
+  function renderTimeline(site) {
+    var track = document.getElementById('tlTrack');
+    // keep the playhead, replace the segments
+    Array.prototype.slice.call(track.querySelectorAll('.tl-seg')).forEach(function (n) { n.remove(); });
+    site.phases.forEach(function (ph, i) {
+      var seg = document.createElement('div');
+      seg.className = 'tl-seg'; seg.id = 'seg' + i;
+      seg.style.left = (ph[0] / site.tmax * 100) + '%';
+      seg.style.width = ((ph[1] - ph[0]) / site.tmax * 100) + '%';
+      seg.title = ph[2] + '  ·  T+' + ph[0] + '–' + ph[1] + (site.tmax > 300 ? ' s' : ' s');
+      track.insertBefore(seg, document.getElementById('tlHead'));
+    });
+    document.getElementById('tlEnd').textContent =
+      'T+' + (site.tmax > 300 ? clinClock(site.tmax, site.tmax) : Math.round(site.tmax) + ' s');
+  }
+
+  function clinClock(sec, tmax) {
+    if (tmax > 300) {
+      var m = Math.floor(sec / 60), r = Math.floor(sec % 60);
+      return m + ':' + String(r).padStart(2, '0');
+    }
+    return sec.toFixed(1) + ' s';
+  }
+
+  function phaseAt(site, T) {
+    var found = null;
+    for (var i = 0; i < site.phases.length; i++) {
+      if (T >= site.phases[i][0]) found = i;
+      if (T >= site.phases[i][0] && T <= site.phases[i][1]) return i;
+    }
+    return found === null ? 0 : found;
   }
 
   function paintPanel(v) {
@@ -927,6 +1533,7 @@ body{
     document.getElementById('ptitle').textContent = v.title;
     document.getElementById('pbody').textContent = v.body;
     document.getElementById('rField').textContent = v.field;
+    document.getElementById('rFieldLabel').textContent = 'Field';
     document.getElementById('rEventLabel').textContent = v.eventLabel;
     document.getElementById('pdot').style.background = '#' + v.accent.toString(16).padStart(6, '0');
     var keys = document.getElementById('keys');
@@ -982,7 +1589,18 @@ body{
       else { touchTipUntil = (window.performance ? performance.now() : Date.now()) + TAP_TIP_MS; }
     }
   }
-  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointerup', function (e) {
+    if (!moved && world) {
+      raycaster.setFromCamera(pointer, camera);
+      var hits = raycaster.intersectObjects(world.hover, true);
+      for (var i = 0; i < hits.length; i++) {
+        var o = hits[i].object;
+        while (o && o.userData.siteIndex === undefined) o = o.parent;
+        if (o) { endDrag(e); selectSite(o.userData.siteIndex); return; }
+      }
+    }
+    endDrag(e);
+  });
   canvas.addEventListener('pointercancel', endDrag);
   canvas.addEventListener('pointerleave', function (e) {
     // A touch pointer "leaves" the moment the finger lifts; don't let that
@@ -1021,8 +1639,10 @@ body{
       : '<path d="M0 0 L9 5.5 L0 11 Z" fill="currentColor"/>';
   }
   document.getElementById('play').addEventListener('click', function () { setPlaying(!state.playing); });
-  document.getElementById('reset').addEventListener('click', function () { loadView(state.view, false); });
-  for (var vb = 0; vb < 3; vb++) {
+  document.getElementById('reset').addEventListener('click', function () {
+    state.clinT = 0; loadView(state.view, false);
+  });
+  for (var vb = 0; vb < BUILDERS.length; vb++) {
     (function (idx) {
       document.getElementById('v' + idx).addEventListener('click', function () {
         if (state.view !== idx) loadView(idx, false);
@@ -1038,7 +1658,7 @@ body{
 
   document.addEventListener('keydown', function (e) {
     if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
-    if (e.key === '1' || e.key === '2' || e.key === '3') {
+    if (e.key >= '1' && e.key <= String(BUILDERS.length)) {
       loadView(parseInt(e.key, 10) - 1, false);
     } else if (e.code === 'Space') {
       e.preventDefault(); setPlaying(!state.playing);
@@ -1115,7 +1735,9 @@ body{
   /* ---------------- loop ---------------- */
   var timeEl = document.getElementById('rTime');
   var eventsEl = document.getElementById('rEvents');
-  var lastShown = -1;
+  var tlHead = document.getElementById('tlHead');
+  var tlPhase = document.getElementById('tlPhase');
+  var lastShown = -1, lastPhase = -1;
 
   function fmt(s) {
     var m = Math.floor(s / 60);
@@ -1152,13 +1774,30 @@ body{
     var shown = Math.floor(state.t * 10);
     if (shown !== lastShown) {
       lastShown = shown;
-      timeEl.textContent = fmt(state.t);
-      eventsEl.textContent = state.view === 2 ? '4' : String(state.events);
+      if (world.isRoute) {
+        var site = world.site, T = state.clinT;
+        timeEl.textContent = 'T+' + clinClock(T, site.tmax);
+        var pi = phaseAt(site, T);
+        eventsEl.textContent = site.phases[pi][2];
+        tlHead.style.left = Math.min(100, T / site.tmax * 100) + '%';
+        if (pi !== lastPhase) {
+          lastPhase = pi;
+          tlPhase.textContent = site.phases[pi][3];
+          for (var q = 0; q < site.phases.length; q++) {
+            var sg = document.getElementById('seg' + q);
+            if (sg) sg.className = 'tl-seg' + (q === pi ? ' on' : '');
+          }
+        }
+      } else {
+        timeEl.textContent = fmt(state.t);
+        eventsEl.textContent = state.view === 3 ? '4' : String(state.events);
+      }
     }
   }
 
   /* ---------------- boot ---------------- */
   resize();
+  renderSites();
   loadView(0, false);
   state.orbit.theta = state.goal.theta;
   state.orbit.phi = state.goal.phi;
