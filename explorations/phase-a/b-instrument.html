@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MXE-003 · Direction B — Precision instrument (concept v0.1)</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{--bg:#e9e7e1;--panel:#f4f2ec;--ink:#16181a;--dim:#5b5f62;--line:#c9c6bd;--acc:#b92d0c;--r:6px}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 "Instrument Sans",system-ui,sans-serif;min-height:100svh;display:grid;place-items:center;padding:24px}
+main{width:min(100%,560px);display:grid;gap:18px}
+.card{background:var(--panel);border:1px solid var(--ink);border-radius:var(--r);padding:20px;display:grid;gap:14px;box-shadow:0 1px 0 #fff inset,0 18px 40px -24px rgba(0,0,0,.35)}
+.mono{font:400 11px/1.35 "Iosevka",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-variant-numeric:tabular-nums}
+.hd{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--ink);padding-bottom:10px}
+.hd h1{font:600 22px/1 "Instrument Sans";letter-spacing:-.02em;color:var(--ink);text-transform:none}
+.hd span.t{font:500 12px/1.2 "Iosevka",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);display:block;margin-top:6px}
+.ruler{font:400 11px/1 "Iosevka",monospace;color:var(--dim);white-space:pre;overflow:hidden}
+.dial{display:grid;place-items:center;padding:6px 0}
+svg{width:100%;max-width:340px;height:auto;overflow:visible}
+svg text{font:500 10px "Iosevka",monospace;letter-spacing:.12em;fill:var(--ink)}
+.edge{stroke:var(--line);stroke-width:1;transition:stroke .15s,stroke-width .15s}
+.edge.on{stroke:var(--acc);stroke-width:2}
+.node circle{fill:var(--panel);stroke:var(--ink);stroke-width:1.5;transition:fill .15s}
+.node.on circle{fill:var(--acc)}
+.node:focus-visible{outline:none}
+.node:focus-visible circle{stroke:var(--acc);stroke-width:4}
+.node{cursor:pointer}
+.readout{border:1px solid var(--ink);border-radius:3px;padding:10px 12px;min-height:3.6em;font:500 13px/1.4 "Iosevka",monospace;background:#fff;letter-spacing:.02em}
+.readout .k{color:var(--dim)}
+.foot{display:flex;justify-content:space-between;gap:10px}
+.phrase{font-size:14px;color:var(--ink);max-width:34ch}
+.note{font:400 11px/1.4 "Iosevka",monospace;color:var(--dim);border-top:1px solid var(--line);padding-top:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){.edge,.node circle{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <article class="card" aria-labelledby="nm">
+    <header class="hd">
+      <div><h1 id="nm">Max Nkosi</h1><span class="t">Design Generalist</span></div>
+      <span class="mono">Instrument MX-001<br>Rev 0.1 · Sample</span>
+    </header>
+    <div class="ruler" aria-hidden="true">|····|····|····|····|····|····|····|····|····|····|····|····|</div>
+    <div class="dial">
+      <svg viewBox="-180 -130 360 260" role="group" aria-label="Four disciplines and the six relationships between them. Select a discipline to highlight its connections.">
+        <g id="edges"></g>
+        <g id="nodes"></g>
+      </svg>
+    </div>
+    <div class="ruler" aria-hidden="true">|····|····|····|····|····|····|····|····|····|····|····|····|</div>
+    <p class="readout" id="out" role="status" aria-live="polite"><span class="k">READOUT</span> · select a discipline, or press 1–4</p>
+    <footer class="foot"><p class="phrase">Understanding how things work. Designing how they connect.</p><span class="mono">4 nodes · 6 links</span></footer>
+  </article>
+  <p class="note">CONCEPT MOCKUP · MXE-003 · B / precision instrument · v0.1 · not approved. Links show relationship between disciplines, not measured data; no scores are claimed.</p>
+</main>
+<script>
+(()=>{
+  const NS='http://www.w3.org/2000/svg',N=[
+    {k:'DIGITAL',x:0,y:-95,d:'interfaces, software, signal'},
+    {k:'EXPERIENCE',x:115,y:0,d:'time, use, feeling'},
+    {k:'PHYSICAL',x:0,y:95,d:'material, form, tolerance'},
+    {k:'SYSTEMS',x:-115,y:0,d:'rules, flows, structure'}];
+  const E=[];for(let i=0;i<4;i++)for(let j=i+1;j<4;j++)E.push([i,j]);
+  const eg=document.getElementById('edges'),ng=document.getElementById('nodes'),out=document.getElementById('out');
+  const el=(n,a)=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e};
+  const edges=E.map(([i,j])=>{const l=el('line',{class:'edge',x1:N[i].x,y1:N[i].y,x2:N[j].x,y2:N[j].y});eg.appendChild(l);return l});
+  const nodes=N.map((n,i)=>{
+    const g=el('g',{class:'node',tabindex:0,role:'button','aria-pressed':'false','aria-label':`${i+1} ${n.k}: ${n.d}`,'data-i':i});
+    g.appendChild(el('circle',{cx:n.x,cy:n.y,r:14}));
+    const t=el('text',{x:n.x,y:n.y+(n.y>0?32:-24),'text-anchor':'middle'});
+    t.textContent=`${i+1} ${n.k}`;g.appendChild(t);ng.appendChild(g);
+    g.addEventListener('click',()=>pick(i));
+    g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(i)}});
+    g.addEventListener('pointerenter',()=>{if(matchMedia('(hover:hover)').matches)show(i)});
+    return g});
+  let cur=-1;
+  function show(i){
+    edges.forEach((l,k)=>l.classList.toggle('on',i>=0&&E[k].includes(i)));
+    nodes.forEach((g,k)=>{const on=k===i||(i>=0&&E.some(p=>p.includes(i)&&p.includes(k)));g.classList.toggle('on',k===i);});
+    if(i<0){out.innerHTML='<span class="k">READOUT</span> · select a discipline, or press 1–4';return}
+    const rel=N.map((n,k)=>k===i?null:n.k).filter(Boolean).join(' · ');
+    out.innerHTML=`<span class="k">${N[i].k}</span> — ${N[i].d}<br><span class="k">LINKED →</span> ${rel}`}
+  function pick(i){cur=cur===i?-1:i;nodes.forEach((g,k)=>g.setAttribute('aria-pressed',k===cur));show(cur)}
+  addEventListener('keydown',e=>{if(/^[1-4]$/.test(e.key)&&!e.metaKey&&!e.ctrlKey)pick(+e.key-1)});
+  document.querySelector('svg').addEventListener('pointerleave',()=>show(cur));
+  const q=new URLSearchParams(location.search).get('pick');if(q!==null)pick(+q);
+})();
+</script>
+</body>
+</html>
