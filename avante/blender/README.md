@@ -1,11 +1,11 @@
-# Avante Brandy — Blender master scene (v002)
+# Avante Brandy — Blender master scene (v004)
 
 Concept 1 rev D packaging on the 750 ml Imperial bottle, built procedurally from the
 Figma/Notion handoff (Figma file `JcxeRDhCrtgZUXhTWQn2hV`, pages 01–03).
 
 ## Open it
 
-1. Open `avante_master_v002.blend` (v001 kept for reference) in Blender 4.2+ (built and tested with Blender 5.2.3 LTS).
+1. Open `avante_master_v004.blend` (v001, v002 and the v003 checkpoint kept for reference) in Blender 4.2+ (built and tested with Blender 5.2.3 LTS).
 2. Or rebuild from source: **Scripting** tab → **Open** `build_avante_master.py` → **Run Script**.
    The `textures/` folder must stay next to the script.
 3. Cameras: `CAM_Hero`, `CAM_ThreeQuarter`, `CAM_Macro_Avante`. Render engine: Cycles.
@@ -52,3 +52,17 @@ collar 23.66–37.64 mm, roundel centre 195.9 mm, inner volume 750.0 ml).
 - A small residual step remains where the wrap crown crosses from the shoulder onto the bevel corners.
 - Brandy colour, light levels and foil roughness are first-pass values for look development.
 - No glass mould seams; brandy colour still to be calibrated against product photography.
+
+## v003 / v004 changes
+
+`avante_master_v003.blend` is a checkpoint (brandy calibration only). `avante_master_v004.blend` is current.
+
+- Wrap development fixed: 1.02 mm jump at the fold and v=0 removed; front art now on the rev D datum (wrap bottom 165.87 mm, spec 165.9).
+- Glass: monotone-cubic profile, finer rings, 12 mm inner heel fillet, 3.5 mm punt, base 20.6 mm, wall 3.6 mm, still 750 ml.
+- Liquid overlaps glass by 0.05 mm (no air film), IOR 1.355, 1.8 mm meniscus.
+- Paper: felt and fibre relief, separate ink and bare-paper response, cut-edge material, paper reverse visible through the back.
+- Capsule: film bridges steps, geometric pleats, 2 mm back seam, lower gloss.
+- Foil: true 0.2 mm emboss via adaptive subdivision, foil micro-roughness. Roundel: conforming mesh, 0.05 mm film, 0.04 mm stamped-foil relief.
+- Studio: off-axis key, strip rims, flags, camera-invisible back and foil cards, AgX with no look, CAM_Turntable (120 frames), roundel and flag macro cameras.
+
+`qc_render.py` renders the fixed comparison cameras into `renders/qc/`. Specialist reports are in `research/`; most numeric values there are artistic, as each report states.
