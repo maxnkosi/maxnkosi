@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import GUI from 'three/examples/jsm/libs/lil-gui.module.min.js';
 
 /** Default settings per material. All values are live-editable from the panel. */
 export function defaultSettings(kind) {
@@ -48,8 +47,9 @@ export function applySettings(s, { mat, scene, key, rim, ao, kind }) {
   }
 }
 
-/** Build the lil-gui panel inside `host`; `onChange` fires after every edit. */
-export function buildPanel(host, s, kind, onChange, onReset, io) {
+/** Build the lil-gui panel (async: lil-gui is lazy-loaded) inside `host`; `onChange` fires after every edit. */
+export async function buildPanel(host, s, kind, onChange, onReset, io) {
+  const { default: GUI } = await import('three/examples/jsm/libs/lil-gui.module.min.js'); // only fetched when the panel is shown
   const gui = new GUI({ container: host, title: 'Glass settings', width: 260 });
   Object.assign(gui.domElement.style, { position: 'absolute', top: '8px', right: '8px', zIndex: 5 });
   const ch = () => onChange();
@@ -105,6 +105,7 @@ export function buildPanel(host, s, kind, onChange, onReset, io) {
   });
 
   gui.add({ reset: onReset }, 'reset').name('Reset to defaults');
+  if (host.clientWidth < 640) gui.close(); // start collapsed on small screens so it does not cover the logo
   ['Absorption / tint', 'Reflections', 'Logo artwork', 'Lighting (static)', 'Occlusion (AO)', 'Save / share'].forEach((n) => gui.folders.find((x) => x._title === n)?.close());
   return gui;
 }

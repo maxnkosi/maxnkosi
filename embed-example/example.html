@@ -9,6 +9,7 @@
     import { mountCurrencyStreamLogo } from './currency-stream-logo.js';
     mountCurrencyStreamLogo(document.getElementById('logo'), {
       modelUrl: './models/currency-stream-logo.glb', // path to the GLB on your host
+      poster: './posters/branded.webp', // shown instantly; also the fallback without WebGL
       view: 'front',        // 'front' | 'oblique'
       controls: true,       // drag to orbit, wheel to zoom
       background: '#ffffff' // or null for a transparent canvas

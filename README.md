@@ -56,3 +56,22 @@ Pass starting values with `settings: { glass: { ior: 1.7 }, occlusion: { enabled
 
 Panel edits auto-save in the browser (`localStorage`, separately for the coloured and clear versions) and come back on reload.
 **Save / share → Copy settings (JSON)** exports them; paste JSON into the field below it to load. To make a set permanent for everyone, pass it as `settings: {...}` or put the values in `defaultSettings()` in `src/settings.js`.
+
+### Performance
+
+| | before | after |
+|---|---|---|
+| GLB | 5.2 MB (3.3 MB gzip) | **1.0 MB (0.4 MB gzip)** |
+| core JS (gzip) | 190 kB | **161 kB** (panel + occlusion are separate lazy chunks, ~17 kB gzip, fetched only if used) |
+| idle cost | rendered every frame | **no frames when nothing changes** |
+| single-file artifact | 7.5 MB | 2.0 MB |
+
+What was done:
+- `tools/optimize_glb.mjs` runs after the Blender export: exact-duplicate weld, 14-bit position / 10-bit normal quantization, meshopt compression, texture resized to 1536 px. Rounded bevels and UVs are unchanged (the loader needs the meshopt decoder, already wired in `src/logo.js`).
+- The logo only loads when it is within 300 px of the viewport (`lazy`), renders only on orbit/resize/setting changes, pauses off-screen, and honours `prefers-reduced-motion`.
+- `poster: '/posters/branded.webp'` (12 kB; `clear.webp` is 4 kB) shows instantly and stays as the fallback if WebGL is unavailable.
+- `maxPixelRatio` (default 2) can be lowered, e.g. `1.5`, for phones.
+
+Pipeline: `export_static_logo.py` -> `node tools/optimize_glb.mjs in.glb out.glb` -> `npm run build`.
+
+Serving: use gzip/brotli for `.js`, long cache headers for the hashed files in `chunks/`, and `Cache-Control: immutable` for the `.glb` if you version its filename. Preload hint if the logo is above the fold: `<link rel="preload" href="/models/currency-stream-logo.glb" as="fetch" crossorigin>`.
