@@ -46,3 +46,8 @@ Serve over http(s) (not `file://`) and enable gzip/brotli for the `.glb`/`.js` o
 
 Same GLB, no tint or artwork: pass `material: 'clear'` to `mountCurrencyStreamLogo` (or open the demo with `?material=clear`).
 With the default white background it uses a soft studio backdrop so the glass has something to refract; set `background` to a CSS colour, or `null` for a transparent canvas.
+
+### Settings panel
+
+`panel: true` (the demo shows it unless `?panel=0`) adds a live panel: IOR, depth, transmission, frosting, dispersion, internal back faces, absorption/tint, specular/environment/clearcoat/iridescence, artwork strength (coloured version), static light intensities and ambient occlusion (GTAO: intensity, radius, falloff, thickness, scale).
+Pass starting values with `settings: { glass: { ior: 1.7 }, occlusion: { enabled: true } }`; read or change them later via the returned `.settings` and `.update()`. Defaults live in `src/settings.js`.

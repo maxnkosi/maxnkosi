@@ -34,9 +34,11 @@ export function createLogoGlass(exportedMaterial) {
 
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uLogo = { value: logoTex };
+    shader.uniforms.uArtwork = { value: 1 };
     shader.uniforms.uFacingMin = { value: 0.88 };
     shader.uniforms.uFacingMax = { value: 0.998 };
     shader.uniforms.uGlossyTint = { value: new THREE.Color(0.65, 0.84, 0.89) };
+    mat.userData.uniforms = shader.uniforms; // live-editable from the settings panel
 
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec2 vLogoUv;\nvarying vec3 vLogoWorldPos;\nvarying vec3 vLogoWorldN;')
@@ -47,7 +49,7 @@ export function createLogoGlass(exportedMaterial) {
 
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
-        uniform sampler2D uLogo; uniform float uFacingMin; uniform float uFacingMax; uniform vec3 uGlossyTint;
+        uniform sampler2D uLogo; uniform float uArtwork; uniform float uFacingMin; uniform float uFacingMax; uniform vec3 uGlossyTint;
         varying vec2 vLogoUv; varying vec3 vLogoWorldPos; varying vec3 vLogoWorldN;`)
       .replace('#include <opaque_fragment>', `#include <opaque_fragment>
         {
@@ -57,7 +59,7 @@ export function createLogoGlass(exportedMaterial) {
           float facing = clamp((dot(N, V) - uFacingMin) / (uFacingMax - uFacingMin), 0.0, 1.0);
           vec3 art = texture2D(uLogo, vLogoUv).rgb;           // sampler is sRGB-decoded
           vec3 artShader = mix(art, uGlossyTint * art, 0.075); // Emission/Glossy 0.075 mix
-          gl_FragColor.rgb = mix(gl_FragColor.rgb, artShader, facing);
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, artShader, facing * uArtwork);
           gl_FragColor.a = 1.0;
         }`);
   };
@@ -86,15 +88,27 @@ export function createClearGlass() {
   });
 }
 
-/** Soft studio backdrop so clear glass has something to refract (flat white hides it). */
+/**
+ * Soft studio backdrop so clear glass has something to refract (flat white hides it).
+ * A big inverted sphere rather than scene.background, because a textured
+ * background breaks the ambient-occlusion pass. Only +-10deg of it is ever in view.
+ */
 export function createStudioBackdrop() {
-  const c = document.createElement('canvas'); c.width = 16; c.height = 512;
+  const H = 1024, c = document.createElement('canvas'); c.width = 8; c.height = H;
   const g = c.getContext('2d');
-  const grad = g.createLinearGradient(0, 0, 0, 512);
-  grad.addColorStop(0, '#f4f7f9'); grad.addColorStop(0.5, '#cfd8de'); grad.addColorStop(1, '#eef2f4');
-  g.fillStyle = grad; g.fillRect(0, 0, 16, 512);
-  g.fillStyle = 'rgba(40,60,75,0.10)';           // faint horizon bands -> visible refraction
-  for (const y of [150, 170, 330, 352]) g.fillRect(0, y, 16, 8);
+  const grad = g.createLinearGradient(0, H * 0.38, 0, H * 0.62); // canvas top = sphere top
+  grad.addColorStop(0, '#f4f7f9'); grad.addColorStop(0.5, '#c3ced5'); grad.addColorStop(1, '#eef2f4');
+  g.fillStyle = '#f4f7f9'; g.fillRect(0, 0, 8, H);
+  g.fillStyle = grad; g.fillRect(0, H * 0.38, 8, H * 0.24);
+  g.fillStyle = '#eef2f4'; g.fillRect(0, H * 0.62, 8, H * 0.38);
+  g.fillStyle = 'rgba(40,60,75,0.18)';           // faint horizon bands -> visible refraction
+  for (const f of [0.4655, 0.4745, 0.5255, 0.5345]) g.fillRect(0, H * f, 8, 2);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-  return t;
+  t.anisotropy = 4;
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(80, 48, 32),
+    new THREE.MeshBasicMaterial({ map: t, side: THREE.BackSide, fog: false, toneMapped: false }),
+  );
+  mesh.name = 'Studio backdrop';
+  return mesh;
 }

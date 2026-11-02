@@ -2,6 +2,11 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { defaultSettings, applySettings, buildPanel } from './settings.js';
 import { createLogoGlass, createClearGlass, createStudioBackdrop } from './glassMaterial.js';
 
 const PRESETS = { front: [0, 0], oblique: [38, 14] };
@@ -12,6 +17,8 @@ const PRESETS = { front: [0, 0], oblique: [38, 14] };
  * @param {object} [o]
  * @param {string} [o.modelUrl]  URL of currency-stream-logo.glb
  * @param {'branded'|'clear'} [o.material='branded']  'clear' = 100% clear glass, no tint or artwork
+ * @param {boolean} [o.panel=false]  show the live settings panel (refraction, reflections, occlusion)
+ * @param {object} [o.settings]  partial overrides of the defaults in settings.js
  * @param {ArrayBuffer} [o.modelData]  GLB bytes already in memory (skips the network fetch)
  * @param {'front'|'oblique'} [o.view]  start pose (or pass yaw/pitch in degrees)
  * @param {boolean} [o.controls=true]  allow drag-to-orbit / wheel-to-zoom
@@ -21,7 +28,7 @@ const PRESETS = { front: [0, 0], oblique: [38, 14] };
 export function mountCurrencyStreamLogo(el, o = {}) {
   const {
     modelUrl = `${import.meta.env.BASE_URL}models/currency-stream-logo.glb`,
-    view = 'front', material = 'branded', modelData = null, controls: enableControls = true, background = '#ffffff',
+    view = 'front', material = 'branded', panel = false, settings: initial = null, modelData = null, controls: enableControls = true, background = '#ffffff',
   } = o;
   const [yaw, pitch] = o.yaw !== undefined ? [o.yaw, o.pitch ?? 0] : PRESETS[view] ?? PRESETS.front;
 
@@ -33,7 +40,7 @@ export function mountCurrencyStreamLogo(el, o = {}) {
   el.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  if (material === 'clear' && background === '#ffffff') scene.background = createStudioBackdrop();
+  if (material === 'clear' && background === '#ffffff') scene.add(createStudioBackdrop());
   else if (background !== null) scene.background = new THREE.Color(background);
 
   // Static lighting: fixed studio environment + two fixed lights.
@@ -43,6 +50,32 @@ export function mountCurrencyStreamLogo(el, o = {}) {
   const rim = new THREE.DirectionalLight(0xcfeeff, 0.8); rim.position.set(6, -3, 5); scene.add(rim);
 
   const camera = new THREE.PerspectiveCamera(18, 1, 0.1, 500);
+
+  const defaults = () => defaultSettings(material);
+  const settings = defaults();
+  for (const k of Object.keys(initial ?? {})) Object.assign(settings[k] ?? (settings[k] = {}), initial[k]);
+  let glassMat = null, composer = null, aoPass = null, gui = null;
+
+  const sync = () => {
+    if (!glassMat) return;
+    if (settings.occlusion.enabled && !composer) {
+      const size = renderer.getSize(new THREE.Vector2());
+      const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4 });
+      composer = new EffectComposer(renderer, rt);
+      composer.setPixelRatio(renderer.getPixelRatio());
+      composer.addPass(new RenderPass(scene, camera));
+      aoPass = new GTAOPass(scene, camera, size.x, size.y);
+      composer.addPass(aoPass);
+      composer.addPass(new OutputPass());
+      composer.setSize(size.x, size.y);
+    }
+    applySettings(settings, { mat: glassMat, scene, key, rim, ao: aoPass, kind: material });
+  };
+  const reset = () => {
+    const d = defaults();
+    for (const k of Object.keys(d)) Object.assign(settings[k], d[k]);
+    gui?.controllersRecursive().forEach((c) => c.updateDisplay()); sync();
+  };
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enabled = enableControls;
   controls.enableDamping = true; controls.dampingFactor = 0.08; controls.rotateSpeed = 0.8;
@@ -50,7 +83,7 @@ export function mountCurrencyStreamLogo(el, o = {}) {
 
   const resize = () => {
     const w = el.clientWidth || 1, h = el.clientHeight || 1;
-    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false); composer?.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
   };
   const ro = new ResizeObserver(resize); ro.observe(el); resize();
 
@@ -71,6 +104,7 @@ export function mountCurrencyStreamLogo(el, o = {}) {
       const glass = material === 'clear' ? createClearGlass()
         : createLogoGlass(gltf.scene.getObjectByProperty('isMesh', true).material);
       logo.traverse((m) => { if (m.isMesh) m.material = glass; });
+      glassMat = glass;
 
       const box = new THREE.Box3().setFromObject(logo);
       const size = box.getSize(new THREE.Vector3());
@@ -83,7 +117,14 @@ export function mountCurrencyStreamLogo(el, o = {}) {
       controls.minDistance = radius * 0.4; controls.maxDistance = radius * 3;
       controls.target.set(0, 0, 0); controls.update();
 
-      renderer.setAnimationLoop(() => { if (visible) { controls.update(); renderer.render(scene, camera); } });
+      el.style.position ||= 'relative';
+      if (panel) gui = buildPanel(el, settings, material, sync, reset);
+      sync();
+      renderer.setAnimationLoop(() => {
+        if (!visible) return;
+        controls.update();
+        if (settings.occlusion.enabled && composer) composer.render(); else renderer.render(scene, camera);
+      });
       el.dataset.ready = 'true';
       resolve();
     };
@@ -93,10 +134,10 @@ export function mountCurrencyStreamLogo(el, o = {}) {
   });
 
   return {
-    ready, setView,
+    ready, setView, settings, update: sync,
     dispose() {
       renderer.setAnimationLoop(null); ro.disconnect(); io.disconnect(); controls.dispose();
-      renderer.dispose(); renderer.domElement.remove();
+      gui?.destroy(); composer?.dispose(); renderer.dispose(); renderer.domElement.remove();
     },
   };
 }
