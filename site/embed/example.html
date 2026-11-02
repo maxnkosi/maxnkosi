@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Currency Stream logo – embed example</title></head>
+<body style="margin:0;font-family:system-ui">
+  <h1 style="padding:16px">Your page</h1>
+  <!-- Any size works; the canvas fills this box. -->
+  <div id="logo" style="width:min(90vw,520px);height:min(90vw,520px);margin:0 auto"></div>
+  <script type="module">
+    import { mountCurrencyStreamLogo } from './currency-stream-logo.js';
+    mountCurrencyStreamLogo(document.getElementById('logo'), {
+      modelUrl: './models/currency-stream-logo.glb', // path to the GLB on your host
+      view: 'front',        // 'front' | 'oblique'
+      controls: true,       // drag to orbit, wheel to zoom
+      background: '#ffffff' // or null for a transparent canvas
+    });
+  </script>
+</body></html>
