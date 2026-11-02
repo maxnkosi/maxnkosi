@@ -49,7 +49,7 @@ export function applySettings(s, { mat, scene, key, rim, ao, kind }) {
 }
 
 /** Build the lil-gui panel inside `host`; `onChange` fires after every edit. */
-export function buildPanel(host, s, kind, onChange, onReset) {
+export function buildPanel(host, s, kind, onChange, onReset, io) {
   const gui = new GUI({ container: host, title: 'Glass settings', width: 260 });
   Object.assign(gui.domElement.style, { position: 'absolute', top: '8px', right: '8px', zIndex: 5 });
   const ch = () => onChange();
@@ -90,7 +90,35 @@ export function buildPanel(host, s, kind, onChange, onReset) {
   o.add(s.occlusion, 'thickness', 0.1, 4, 0.05).name('Thickness').onChange(ch);
   o.add(s.occlusion, 'scale', 0.2, 3, 0.05).name('Scale').onChange(ch);
 
+  const sv = gui.addFolder('Save / share');
+  const box = { status: 'Auto-saved in this browser', json: '' };
+  sv.add(box, 'status').name('Status').disable();
+  sv.add({ copy: async () => {
+    box.json = io.get(); jsonCtl.updateDisplay();
+    try { await navigator.clipboard.writeText(box.json); box.status = 'Copied to clipboard'; }
+    catch { box.status = 'Select the JSON below and copy it'; }
+    gui.controllersRecursive().forEach((c) => c.updateDisplay());
+  } }, 'copy').name('Copy settings (JSON)');
+  const jsonCtl = sv.add(box, 'json').name('JSON — paste to load').onFinishChange((txt) => {
+    box.status = io.set(txt) ? 'Loaded' : 'Not valid settings JSON';
+    gui.controllersRecursive().forEach((c) => c.updateDisplay());
+  });
+
   gui.add({ reset: onReset }, 'reset').name('Reset to defaults');
-  ['Absorption / tint', 'Reflections', 'Logo artwork', 'Lighting (static)', 'Occlusion (AO)'].forEach((n) => gui.folders.find((x) => x._title === n)?.close());
+  ['Absorption / tint', 'Reflections', 'Logo artwork', 'Lighting (static)', 'Occlusion (AO)', 'Save / share'].forEach((n) => gui.folders.find((x) => x._title === n)?.close());
   return gui;
+}
+
+/** Copy values from `src` into `target`, only for keys that already exist there. */
+export function mergeSettings(target, src) {
+  if (!src || typeof src !== 'object') return false;
+  let any = false;
+  for (const k of Object.keys(target)) {
+    if (src[k] && typeof src[k] === 'object') {
+      for (const f of Object.keys(target[k])) {
+        if (typeof src[k][f] === typeof target[k][f]) { target[k][f] = src[k][f]; any = true; }
+      }
+    }
+  }
+  return any;
 }

@@ -51,3 +51,8 @@ With the default white background it uses a soft studio backdrop so the glass ha
 
 `panel: true` (the demo shows it unless `?panel=0`) adds a live panel: IOR, depth, transmission, frosting, dispersion, internal back faces, absorption/tint, specular/environment/clearcoat/iridescence, artwork strength (coloured version), static light intensities and ambient occlusion (GTAO: intensity, radius, falloff, thickness, scale).
 Pass starting values with `settings: { glass: { ior: 1.7 }, occlusion: { enabled: true } }`; read or change them later via the returned `.settings` and `.update()`. Defaults live in `src/settings.js`.
+
+### Saving settings
+
+Panel edits auto-save in the browser (`localStorage`, separately for the coloured and clear versions) and come back on reload.
+**Save / share → Copy settings (JSON)** exports them; paste JSON into the field below it to load. To make a set permanent for everyone, pass it as `settings: {...}` or put the values in `defaultSettings()` in `src/settings.js`.

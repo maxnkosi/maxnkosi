@@ -6,7 +6,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import { defaultSettings, applySettings, buildPanel } from './settings.js';
+import { defaultSettings, applySettings, buildPanel, mergeSettings } from './settings.js';
 import { createLogoGlass, createClearGlass, createStudioBackdrop } from './glassMaterial.js';
 
 const PRESETS = { front: [0, 0], oblique: [38, 14] };
@@ -54,6 +54,10 @@ export function mountCurrencyStreamLogo(el, o = {}) {
   const defaults = () => defaultSettings(material);
   const settings = defaults();
   for (const k of Object.keys(initial ?? {})) Object.assign(settings[k] ?? (settings[k] = {}), initial[k]);
+  // Per-browser persistence (separate for each material). Explicit options win over saved values only on first run.
+  const STORE = `currency-stream-logo:${material}`;
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch { /* storage unavailable */ } };
+  try { mergeSettings(settings, JSON.parse(localStorage.getItem(STORE))); } catch { /* none saved */ }
   let glassMat = null, composer = null, aoPass = null, gui = null;
 
   const sync = () => {
@@ -70,11 +74,17 @@ export function mountCurrencyStreamLogo(el, o = {}) {
       composer.setSize(size.x, size.y);
     }
     applySettings(settings, { mat: glassMat, scene, key, rim, ao: aoPass, kind: material });
+    save();
   };
   const reset = () => {
     const d = defaults();
     for (const k of Object.keys(d)) Object.assign(settings[k], d[k]);
+    try { localStorage.removeItem(STORE); } catch { /* ignore */ }
     gui?.controllersRecursive().forEach((c) => c.updateDisplay()); sync();
+  };
+  const settingsIO = {
+    get: () => JSON.stringify(settings, null, 1),
+    set: (txt) => { try { const ok = mergeSettings(settings, JSON.parse(txt)); sync(); return ok; } catch { return false; } },
   };
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enabled = enableControls;
@@ -118,7 +128,7 @@ export function mountCurrencyStreamLogo(el, o = {}) {
       controls.target.set(0, 0, 0); controls.update();
 
       el.style.position ||= 'relative';
-      if (panel) gui = buildPanel(el, settings, material, sync, reset);
+      if (panel) gui = buildPanel(el, settings, material, sync, reset, settingsIO);
       sync();
       renderer.setAnimationLoop(() => {
         if (!visible) return;
