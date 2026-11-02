@@ -39,7 +39,9 @@ CAP_TOP = 238.1          # P (glass + ≈11.2 mm bar-top)
 WALL = 4.5               # P side wall
 BORE = 26.0              # P neck bore
 CHAMFER = 0.0754         # P chamfer leg / side (W2124 ratio)
-N_RING = 192
+N_RING = 256
+EDGE_SOFT = 0.5          # P vertical-edge softening (mm)
+LABEL_T = 0.10           # P paper thickness SUB-01 (mm)
 
 # rev D label placement (mm, heights above base)
 Z_EDGE = CAP_TOP - 87.5          # max-width line = wrap development origin
@@ -89,7 +91,8 @@ def sq_radius(theta, S):
     c, s = abs(math.cos(theta)), abs(math.sin(theta))
     r1 = h / max(c, s)
     r2 = (S - a) / (c + s)
-    return min(r1, r2)
+    k = EDGE_SOFT  # soft-min ≈ R1–2 mm fillets on the chamfer edges (P)
+    return -k * math.log(math.exp(-r1 / k) + math.exp(-r2 / k))
 
 def section_r(theta, S, t):
     return (1 - t) * sq_radius(theta, S) + t * S / 2
@@ -223,6 +226,7 @@ def srgb(c):  # hex → linear tuple
     return tuple(((x / 12.92) if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4) for x in v) + (1.0,)
 
 NAVY, GOLD = srgb('#003653'), srgb('#E7C187')
+FOIL_F0 = (0.95, 0.68, 0.30, 1.0)  # FOIL-01 warm pale gold reflectance (P, match to foil swatch)
 
 def mat_glass():
     m, nt, out = node_mat('M_GLS-01_Flint')
@@ -237,7 +241,7 @@ def mat_brandy():
     p = principled(nt, **{'Base Color': (1, 1, 1, 1), 'Roughness': 0.0, 'IOR': 1.36, 'Transmission Weight': 1.0})
     vol = nt.nodes.new('ShaderNodeVolumeAbsorption')
     vol.inputs['Color'].default_value = (0.9, 0.7, 0.2, 1)  # P — target transmittance ≈(0.57,0.19,0.01) over 80 mm; calibrate to reference photography
-    vol.inputs['Density'].default_value = 70.0                   # per metre
+    vol.inputs['Density'].default_value = 95.0                   # per metre
     nt.links.new(p.outputs[0], out.inputs['Surface']); nt.links.new(vol.outputs[0], out.inputs['Volume'])
     return m
 
@@ -246,11 +250,11 @@ def mat_label(name, color, alpha, foil, emb=None, uv=None):
     m, nt, out = node_mat(name)
     T = tex_dir()
     c = img(nt, os.path.join(T, color), loc=(-900, 300))
-    a = img(nt, os.path.join(T, alpha), True, loc=(-900, 0))
+    a = img(nt, os.path.join(T, alpha), True, loc=(-900, 0)) if alpha else None
     f = img(nt, os.path.join(T, foil), True, loc=(-900, -300))
     paper = principled(nt, **{'Roughness': 0.68, 'Sheen Weight': 0.25})   # VAR-01 matte over SUB-01
     nt.links.new(c.outputs['Color'], paper.inputs['Base Color'])
-    foilb = principled(nt, **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.28, 'Anisotropic': 0.3})
+    foilb = principled(nt, **{'Base Color': FOIL_F0, 'Metallic': 1.0, 'Roughness': 0.18, 'Anisotropic': 0.3})
     mix = nt.nodes.new('ShaderNodeMixShader'); mix.location = (400, 0)
     nt.links.new(f.outputs['Color'], mix.inputs['Fac'])
     nt.links.new(paper.outputs[0], mix.inputs[1]); nt.links.new(foilb.outputs[0], mix.inputs[2])
@@ -264,6 +268,8 @@ def mat_label(name, color, alpha, foil, emb=None, uv=None):
         bump.inputs['Strength'].default_value = 0.6; bump.inputs['Distance'].default_value = 0.2 * MM  # EMB-01 ≈0.2 mm (P)
         nt.links.new(e.outputs['Color'], bump.inputs['Height'])
         nt.links.new(bump.outputs['Normal'], paper.inputs['Normal']); nt.links.new(bump.outputs['Normal'], foilb.inputs['Normal'])
+    if a is None:
+        nt.links.new(mix.outputs[0], out.inputs['Surface']); return m
     transp = nt.nodes.new('ShaderNodeBsdfTransparent')
     mix2 = nt.nodes.new('ShaderNodeMixShader'); mix2.location = (600, 0)
     nt.links.new(a.outputs['Color'], mix2.inputs['Fac'])
@@ -278,7 +284,7 @@ def mat_roundel():
     f = img(nt, os.path.join(T, 'MASK-FOIL-01__LBL-ROUNDEL-01.png'), True, loc=(-900, -100))
     ink = principled(nt, **{'Roughness': 0.45})
     nt.links.new(c.outputs['Color'], ink.inputs['Base Color'])
-    foilb = principled(nt, **{'Base Color': GOLD, 'Metallic': 1.0, 'Roughness': 0.28})
+    foilb = principled(nt, **{'Base Color': FOIL_F0, 'Metallic': 1.0, 'Roughness': 0.18})
     mix = nt.nodes.new('ShaderNodeMixShader'); nt.links.new(f.outputs['Color'], mix.inputs['Fac'])
     nt.links.new(ink.outputs[0], mix.inputs[1]); nt.links.new(foilb.outputs[0], mix.inputs[2])
     film = principled(nt, **{'Roughness': 0.04, 'IOR': 1.49, 'Transmission Weight': 1.0})  # SUB-02 clear film
@@ -319,6 +325,10 @@ def build_glass(C, base_t):
 def build_liquid(C, base_t):
     zs = z_samples(base_t + 0.05, FILL_Z)
     rings = [ring(z, inner_width(z) - 0.1, roundness(z)) for z in zs]
+    # meniscus: liquid climbs ≈1.3 mm up the glass wall (P), falls to flat within ≈3.5 mm
+    Wf, tf = inner_width(FILL_Z) - 0.1, roundness(FILL_Z)
+    for dd, hh in ((0.0, 1.3), (0.15, 0.95), (0.4, 0.62), (0.8, 0.36), (1.4, 0.17), (2.3, 0.06), (3.5, 0.0)):
+        rings.append(ring(FILL_Z + hh, Wf - 2 * dd, tf))
     verts, faces = loft(rings, close_bottom=(0, 0, (base_t + 0.05) * MM), close_top=(0, 0, FILL_Z * MM))
     ob = mesh_from('LIQ-01_Brandy', verts, faces, C)
     recalc_normals(ob); shade_smooth(ob, 40)
@@ -392,43 +402,76 @@ def inside(pt, poly):
         if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1: c = not c
     return c
 
+def poly_sdf(pt, poly):
+    """signed distance (mm) of pt to polygon; negative inside."""
+    x, y = pt; dmin = 1e9; n = len(poly)
+    for i in range(n):
+        x1, y1 = poly[i]; x2, y2 = poly[(i + 1) % n]
+        dx, dy = x2 - x1, y2 - y1; L2 = dx * dx + dy * dy or 1e-12
+        t = max(0.0, min(1.0, ((x - x1) * dx + (y - y1) * dy) / L2))
+        ex, ey = x - (x1 + t * dx), y - (y1 + t * dy)
+        dmin = min(dmin, ex * ex + ey * ey)
+    d = math.sqrt(dmin)
+    return -d if inside(pt, poly) else d
+
+def clipped_grid(us, vs, sdf, pos, uvf):
+    """Build a mesh over param grid (us × vs), clipped to sdf ≤ 0 with edge-interpolated
+    boundary (marching-squares style). pos(u,v)→xyz, uvf(u,v)→(U,V)."""
+    nu = len(us); d = {}
+    for j, v in enumerate(vs):
+        for i, u in enumerate(us): d[(i, j)] = sdf(u, v)
+    verts, uvs, faces, key = [], [], [], {}
+    def vid(k, u, v):
+        if k not in key:
+            key[k] = len(verts); verts.append(pos(u, v)); uvs.append(uvf(u, v))
+        return key[k]
+    for j in range(len(vs) - 1):
+        for i in range(nu - 1):
+            c = [(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)]
+            vals = [d[k] for k in c]
+            if all(x > 0 for x in vals): continue
+            poly = []
+            for e in range(4):
+                a, b = c[e], c[(e + 1) % 4]; da, db = d[a], d[b]
+                if da <= 0: poly.append(vid(('v',) + a, us[a[0]], vs[a[1]]))
+                if (da <= 0) != (db <= 0):
+                    t = da / (da - db)
+                    u = lerp(us[a[0]], us[b[0]], t); v = lerp(vs[a[1]], vs[b[1]], t)
+                    poly.append(vid(('e',) + tuple(sorted((a, b))), u, v))
+            if len(poly) >= 3: faces.append(tuple(poly))
+    return verts, uvs, faces
+
+def finish_label(ob, uvs, mat, thickness=LABEL_T, outward_check=None):
+    uvl = ob.data.uv_layers.new(name='UVMap')
+    for p in ob.data.polygons:
+        for li, vi in zip(p.loop_indices, p.vertices): uvl.data[li].uv = uvs[vi]
+    recalc_normals(ob)
+    if outward_check and outward_check(ob): recalc_normals(ob, inside=True)
+    ob.data.materials.append(mat)
+    sol = ob.modifiers.new('paper', 'SOLIDIFY'); sol.thickness = thickness * MM; sol.offset = 1.0
+    sol.use_rim = True; sol.use_even_offset = True
+    shade_smooth(ob, 30)
+
 def build_wrap(C):
     s_vals = sorted(set([round(-122.5 + 0.5 * i, 3) for i in range(491)] + [-S1_E, -HF_E, HF_E, S1_E]))
     v_vals = [round(-12.5 + 0.5 * j, 3) for j in range(187)]
-    verts, uvs = [], []
-    for v in v_vals:
-        for s in s_vals:
-            verts.append(surf_xyz(s, v, 0.15))
-            dx, dy = dev_xy(s, v)
-            uvs.append(((dx - WRAP_ART['x']) / WRAP_ART['w'], 1 - (dy - WRAP_ART['y']) / WRAP_ART['h'], (dx, dy)))
-    ns = len(s_vals); faces = []
-    for j in range(len(v_vals) - 1):
-        for i in range(ns - 1):
-            q = (j * ns + i, j * ns + i + 1, (j + 1) * ns + i + 1, (j + 1) * ns + i)
-            if any(inside(uvs[k][2], TRIM) for k in q) or inside(
-                    tuple(sum(uvs[k][2][d] for k in q) / 4 for d in (0, 1)), TRIM):
-                faces.append(q)
+    verts, uvs, faces = clipped_grid(
+        s_vals, v_vals,
+        lambda u, v: poly_sdf(dev_xy(u, v), TRIM),
+        lambda u, v: surf_xyz(u, v, 0.03),
+        lambda u, v: ((dev_xy(u, v)[0] - WRAP_ART['x']) / WRAP_ART['w'], 1 - (dev_xy(u, v)[1] - WRAP_ART['y']) / WRAP_ART['h']))
     ob = mesh_from('LBL-FRONT-01_Wrap', verts, faces, C)
-    uvl = ob.data.uv_layers.new(name='UVMap')
-    for p in ob.data.polygons:
-        for li, vi in zip(p.loop_indices, p.vertices):
-            uvl.data[li].uv = uvs[vi][:2]
-    bm = bmesh.new(); bm.from_mesh(ob.data)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-7)
-    loose = [v for v in bm.verts if not v.link_faces]; bmesh.ops.delete(bm, geom=loose, context='VERTS')
-    bm.to_mesh(ob.data); bm.free()
-    recalc_normals(ob)
-    # outward normals
-    if ob.data.polygons and ob.data.polygons[len(ob.data.polygons) // 2].normal.y > 0:
-        recalc_normals(ob, inside=True)
-    ob.data.materials.append(mat_label('M_LBL-FRONT-01_SUB-01_Paper', 'COLOR__LBL-FRONT-01.png', 'ALPHA__LBL-FRONT-01.png',
-                                       'MASK-FOIL-01__LBL-FRONT-01.png', 'MASK-EMB-01__LBL-FRONT-01.png', 'MASK-UV-01__LBL-FRONT-01.png'))
-    shade_smooth(ob, 30)
+    mat = mat_label('M_LBL-FRONT-01_SUB-01_Paper', 'COLOR__LBL-FRONT-01.png', None,
+                    'MASK-FOIL-01__LBL-FRONT-01.png', 'MASK-EMB-01__LBL-FRONT-01.png', 'MASK-UV-01__LBL-FRONT-01.png')
+    def facing_in(o):
+        ps = [p for p in o.data.polygons if abs(p.center.x) < 0.01]
+        return bool(ps) and sum(p.normal.y for p in ps) > 0
+    finish_label(ob, uvs, mat, outward_check=facing_in)
     return ob
 
 # --- collar --------------------------------------------------------------------
 def build_collar(C):
-    rc = NECK_D / 2 + 0.06 + 0.15
+    rc = NECK_D / 2 + 0.06 + 0.03
     L = 2 * COLLAR_F + COLLAR_C
     def uv(s, z):
         return ((COLLAR_BLEED + s) / COLLAR_ART_W, 1 - (COLLAR_BLEED + (COLLAR_TOP - z)) / COLLAR_ART_H)
@@ -444,23 +487,25 @@ def build_collar(C):
         for i in range(nseg):
             a = j * (nseg + 1) + i; b = a + nseg + 1
             faces.append((a, a + 1, b + 1, b))
-    # flag plies (radial, at +X): front ply faces -Y, back ply faces +Y
+    # flag plies (radial, at +X), clipped to the stadium-shaped die (full-radius ends)
+    L, Rr, zm = 2 * COLLAR_F + COLLAR_C, (COLLAR_TOP - COLLAR_BOT) / 2, (COLLAR_TOP + COLLAR_BOT) / 2
+    def stadium_sdf(sv, z):
+        x = min(max(sv, Rr), L - Rr)
+        return math.hypot(sv - x, z - zm) - Rr
+    zs_f = [COLLAR_BOT + (COLLAR_TOP - COLLAR_BOT) * k / 28 for k in range(29)]
+    ds = [COLLAR_F * k / 48 for k in range(49)]
     for ply, yoff, sfun in (('front', -0.12, lambda d: COLLAR_F + COLLAR_C + d), ('back', 0.12, lambda d: COLLAR_F - d)):
-        base = len(verts); nd = 24
-        for z in zs:
-            for k in range(nd + 1):
-                d = COLLAR_F * k / nd
-                verts.append(((rc + d) * MM, yoff * MM, z * MM)); uvs.append(uv(sfun(d), z))
-        for j in range(len(zs) - 1):
-            for k in range(nd):
-                a = base + j * (nd + 1) + k; b = a + nd + 1
-                faces.append((a, a + 1, b + 1, b) if ply == 'back' else (a, b, b + 1, a + 1))
+        fv, fu, ff = clipped_grid(ds, zs_f, lambda d, z: stadium_sdf(sfun(d), z),
+                                  lambda d, z: ((rc + d) * MM, yoff * MM, z * MM), lambda d, z: uv(sfun(d), z))
+        base = len(verts); verts += fv; uvs += fu
+        for f in ff: faces.append(tuple(base + i for i in (f if ply == 'back' else reversed(f))))
     ob = mesh_from('LBL-NECK-01_Collar', verts, faces, C)
+    mat = mat_label('M_LBL-NECK-01_SUB-01_Paper', 'COLOR__LBL-NECK-01.png', None, 'MASK-FOIL-01__LBL-NECK-01.png')
     uvl = ob.data.uv_layers.new(name='UVMap')
     for p in ob.data.polygons:
         for li, vi in zip(p.loop_indices, p.vertices): uvl.data[li].uv = uvs[vi]
-    ob.data.materials.append(mat_label('M_LBL-NECK-01_SUB-01_Paper', 'COLOR__LBL-NECK-01.png', 'ALPHA__LBL-NECK-01.png',
-                                       'MASK-FOIL-01__LBL-NECK-01.png'))
+    ob.data.materials.append(mat)
+    sol = ob.modifiers.new('paper', 'SOLIDIFY'); sol.thickness = LABEL_T * MM; sol.offset = 1.0; sol.use_rim = True
     shade_smooth(ob, 30)
     return ob
 
@@ -520,6 +565,8 @@ def build_studio(C):
     area_light(C, 'LGT_Rim_R_Strip', (0.32, 0.18, 0.15), 0.06, 6, tgt, size_y=0.7)
     area_light(C, 'LGT_Back_Glow', (0.0, 0.35, 0.1), 0.25, 4, (0, 0, 0.09))
     area_light(C, 'LGT_Top', (0.05, -0.05, 0.65), 0.5, 1.2, tgt)
+    area_light(C, 'LGT_Foil_Card', (0.10, -0.5, 0.33), 0.30, 2.2, (0, 0, 0.13), size_y=0.06)  # specular card for FOIL-01
+    area_light(C, 'LGT_Fill_Low', (0.35, -0.5, 0.05), 0.4, 0.5, tgt)
     # cameras
     for name, loc, lens, tgt2 in (('CAM_Hero', (0.0, -0.74, 0.13), 85, (0, 0, 0.119)),
                                   ('CAM_ThreeQuarter', (0.42, -0.6, 0.16), 85, (0, 0, 0.119)),

@@ -1,11 +1,11 @@
-# Avante Brandy — Blender master scene (v001)
+# Avante Brandy — Blender master scene (v002)
 
 Concept 1 rev D packaging on the 750 ml Imperial bottle, built procedurally from the
 Figma/Notion handoff (Figma file `JcxeRDhCrtgZUXhTWQn2hV`, pages 01–03).
 
 ## Open it
 
-1. Open `avante_master_v001.blend` in Blender 4.2+ (built and tested with Blender 5.2.3 LTS).
+1. Open `avante_master_v002.blend` (v001 kept for reference) in Blender 4.2+ (built and tested with Blender 5.2.3 LTS).
 2. Or rebuild from source: **Scripting** tab → **Open** `build_avante_master.py` → **Run Script**.
    The `textures/` folder must stay next to the script.
 3. Cameras: `CAM_Hero`, `CAM_ThreeQuarter`, `CAM_Macro_Avante`. Render engine: Cycles.
@@ -32,14 +32,23 @@ spot-UV are driven by the black/white masks in `textures/` (exported from Figma 
 
 ## Acceptance checks
 
-`python check_avante_master.py` (with the `bpy` module) or run it inside Blender — v001 result: **ALL PASS**
+`python check_avante_master.py` (with the `bpy` module) or run it inside Blender — v001 and v002 result: **ALL PASS (11/11)**
 (glass 226.9 mm, overall 238.1 mm, max width 89.0 mm, capsule 66.27 mm, wrap crown 79.6 mm,
 collar 23.66–37.64 mm, roundel centre 195.9 mm, inner volume 750.0 ml).
+
+## v002 changes
+
+- Wrap and collar flags are now cut to the exact die shape (marching-squares clip of the developed
+  dieline) with real 0.10 mm paper thickness (Solidify with rim) — no alpha-cut edges.
+- Glass vertical edges softened (≈R1–2 mm), so the wrap rolls smoothly over the bevels.
+- FOIL-01: warm pale-gold reflectance, roughness 0.18, plus a specular card light so the foil reads metallic.
+- Brandy absorption deepened; meniscus (≈1.3 mm climb at the glass wall).
 
 ## Known limitations / proposals (P)
 
 - Bottle shape is photo-derived at the supplier height (±0.7 mm). Shoulder angle, bevel width,
   neck Ø, cap Ø and wall thickness are proposals until measured on a real bottle.
-- Label edges come from an alpha texture (no physical paper thickness yet); emboss is a bump, not displacement.
+- Emboss is a bump map (≈0.2 mm), not true displacement — needs adaptive subdivision for extreme macro.
+- A small residual step remains where the wrap crown crosses from the shoulder onto the bevel corners.
 - Brandy colour, light levels and foil roughness are first-pass values for look development.
-- No meniscus yet; no glass mould seams.
+- No glass mould seams; brandy colour still to be calibrated against product photography.
