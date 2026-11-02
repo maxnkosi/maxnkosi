@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { createLogoGlass } from './glassMaterial.js';
+import { createLogoGlass, createClearGlass, createStudioBackdrop } from './glassMaterial.js';
 
 const PRESETS = { front: [0, 0], oblique: [38, 14] };
 
@@ -11,6 +11,7 @@ const PRESETS = { front: [0, 0], oblique: [38, 14] };
  * @param {HTMLElement} el  container; the canvas fills it (give it a size)
  * @param {object} [o]
  * @param {string} [o.modelUrl]  URL of currency-stream-logo.glb
+ * @param {'branded'|'clear'} [o.material='branded']  'clear' = 100% clear glass, no tint or artwork
  * @param {ArrayBuffer} [o.modelData]  GLB bytes already in memory (skips the network fetch)
  * @param {'front'|'oblique'} [o.view]  start pose (or pass yaw/pitch in degrees)
  * @param {boolean} [o.controls=true]  allow drag-to-orbit / wheel-to-zoom
@@ -20,7 +21,7 @@ const PRESETS = { front: [0, 0], oblique: [38, 14] };
 export function mountCurrencyStreamLogo(el, o = {}) {
   const {
     modelUrl = `${import.meta.env.BASE_URL}models/currency-stream-logo.glb`,
-    view = 'front', modelData = null, controls: enableControls = true, background = '#ffffff',
+    view = 'front', material = 'branded', modelData = null, controls: enableControls = true, background = '#ffffff',
   } = o;
   const [yaw, pitch] = o.yaw !== undefined ? [o.yaw, o.pitch ?? 0] : PRESETS[view] ?? PRESETS.front;
 
@@ -32,7 +33,8 @@ export function mountCurrencyStreamLogo(el, o = {}) {
   el.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  if (background !== null) scene.background = new THREE.Color(background);
+  if (material === 'clear' && background === '#ffffff') scene.background = createStudioBackdrop();
+  else if (background !== null) scene.background = new THREE.Color(background);
 
   // Static lighting: fixed studio environment + two fixed lights.
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -66,7 +68,8 @@ export function mountCurrencyStreamLogo(el, o = {}) {
   const ready = new Promise((resolve, reject) => {
     const onLoad = (gltf) => {
       const logo = gltf.scene.getObjectByName('Currency Stream Logo') ?? gltf.scene;
-      const glass = createLogoGlass(gltf.scene.getObjectByProperty('isMesh', true).material);
+      const glass = material === 'clear' ? createClearGlass()
+        : createLogoGlass(gltf.scene.getObjectByProperty('isMesh', true).material);
       logo.traverse((m) => { if (m.isMesh) m.material = glass; });
 
       const box = new THREE.Box3().setFromObject(logo);

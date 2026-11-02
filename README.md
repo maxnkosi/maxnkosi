@@ -41,3 +41,8 @@ npm run dev      # http://127.0.0.1:5173  — drag to orbit, wheel to zoom
 </script>
 ```
 Serve over http(s) (not `file://`) and enable gzip/brotli for the `.glb`/`.js` on your host.
+
+### Clear glass version
+
+Same GLB, no tint or artwork: pass `material: 'clear'` to `mountCurrencyStreamLogo` (or open the demo with `?material=clear`).
+With the default white background it uses a soft studio backdrop so the glass has something to refract; set `background` to a CSS colour, or `null` for a transparent canvas.
