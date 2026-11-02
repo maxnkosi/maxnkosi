@@ -11,6 +11,7 @@ const PRESETS = { front: [0, 0], oblique: [38, 14] };
  * @param {HTMLElement} el  container; the canvas fills it (give it a size)
  * @param {object} [o]
  * @param {string} [o.modelUrl]  URL of currency-stream-logo.glb
+ * @param {ArrayBuffer} [o.modelData]  GLB bytes already in memory (skips the network fetch)
  * @param {'front'|'oblique'} [o.view]  start pose (or pass yaw/pitch in degrees)
  * @param {boolean} [o.controls=true]  allow drag-to-orbit / wheel-to-zoom
  * @param {string|null} [o.background='#ffffff']  CSS colour, or null for transparent
@@ -19,7 +20,7 @@ const PRESETS = { front: [0, 0], oblique: [38, 14] };
 export function mountCurrencyStreamLogo(el, o = {}) {
   const {
     modelUrl = `${import.meta.env.BASE_URL}models/currency-stream-logo.glb`,
-    view = 'front', controls: enableControls = true, background = '#ffffff',
+    view = 'front', modelData = null, controls: enableControls = true, background = '#ffffff',
   } = o;
   const [yaw, pitch] = o.yaw !== undefined ? [o.yaw, o.pitch ?? 0] : PRESETS[view] ?? PRESETS.front;
 
@@ -54,8 +55,16 @@ export function mountCurrencyStreamLogo(el, o = {}) {
   let visible = true;
   const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }); io.observe(el);
 
+  let radius = 1;
+  const setView = (v) => {
+    const [yw, pt] = PRESETS[v] ?? PRESETS.front;
+    const y = THREE.MathUtils.degToRad(yw), p = THREE.MathUtils.degToRad(pt);
+    camera.position.set(Math.sin(y) * Math.cos(p), Math.sin(p), Math.cos(y) * Math.cos(p)).multiplyScalar(radius);
+    controls.target.set(0, 0, 0); controls.update();
+  };
+
   const ready = new Promise((resolve, reject) => {
-    new GLTFLoader().load(modelUrl, (gltf) => {
+    const onLoad = (gltf) => {
       const logo = gltf.scene.getObjectByName('Currency Stream Logo') ?? gltf.scene;
       const glass = createLogoGlass(gltf.scene.getObjectByProperty('isMesh', true).material);
       logo.traverse((m) => { if (m.isMesh) m.material = glass; });
@@ -65,7 +74,7 @@ export function mountCurrencyStreamLogo(el, o = {}) {
       logo.position.sub(box.getCenter(new THREE.Vector3()));
       scene.add(logo);
 
-      const radius = Math.max(size.x, size.y) * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.12;
+      radius = Math.max(size.x, size.y) * 0.5 / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.12;
       const y = THREE.MathUtils.degToRad(yaw), p = THREE.MathUtils.degToRad(pitch);
       camera.position.set(Math.sin(y) * Math.cos(p), Math.sin(p), Math.cos(y) * Math.cos(p)).multiplyScalar(radius);
       controls.minDistance = radius * 0.4; controls.maxDistance = radius * 3;
@@ -74,11 +83,14 @@ export function mountCurrencyStreamLogo(el, o = {}) {
       renderer.setAnimationLoop(() => { if (visible) { controls.update(); renderer.render(scene, camera); } });
       el.dataset.ready = 'true';
       resolve();
-    }, undefined, reject);
+    };
+    const loader = new GLTFLoader();
+    if (modelData) loader.parse(modelData, '', onLoad, reject);
+    else loader.load(modelUrl, onLoad, undefined, reject);
   });
 
   return {
-    ready,
+    ready, setView,
     dispose() {
       renderer.setAnimationLoop(null); ro.disconnect(); io.disconnect(); controls.dispose();
       renderer.dispose(); renderer.domElement.remove();
