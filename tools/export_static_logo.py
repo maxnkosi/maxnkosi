@@ -5,17 +5,23 @@ Usage (bpy module or `blender -b -P`):
 
 The source .blend is never saved; everything happens on the in-memory copy.
 """
+import os
 import sys
 from pathlib import Path
 
 argv = sys.argv[-2:]
 sys.argv = sys.argv[:1]
 import bpy  # noqa: E402
+import numpy as np  # noqa: E402
 from mathutils import Matrix  # noqa: E402
 
 SRC, OUT = argv
 PIECES = ["Central S", "Left arc", "Right arc"]
 ASSEMBLED_FRAME = 226
+# Slab thickness multiplier (env THICKNESS_FACTOR). Bevel profiles keep their
+# radius: the front half moves +Z, the back half -Z, which lengthens only the
+# straight side wall between the two rounded edges.
+THICKNESS_FACTOR = float(os.environ.get("THICKNESS_FACTOR", "2"))
 
 bpy.ops.wm.open_mainfile(filepath=SRC)
 scene = bpy.context.scene
@@ -41,6 +47,16 @@ for n in PIECES:
     ob.parent = None
     ob.matrix_world = pose[n]
 bpy.context.view_layer.update()
+
+# 2b. Thicken without distorting the bevels.
+if THICKNESS_FACTOR != 1.0:
+    for n in PIECES:
+        me = bpy.data.objects[n].data
+        co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3)
+        half = np.abs(co[:, 2]).max()
+        co[:, 2] += np.where(co[:, 2] >= 0, 1.0, -1.0) * half * (THICKNESS_FACTOR - 1.0)
+        me.vertices.foreach_set("co", co.ravel()); me.update()
+        print(f"{n}: thickness {2*half:.3f} -> {2*np.abs(co[:,2]).max():.3f}")
 
 # 3. Drop pivots, cameras, lights, everything that is not one of the pieces.
 for ob in list(bpy.data.objects):

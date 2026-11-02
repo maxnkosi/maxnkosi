@@ -24,7 +24,7 @@ export function createLogoGlass(exportedMaterial) {
     roughness: 0.055,
     ior: 1.5,
     transmission: 1,
-    thickness: 0.32, // slab depth in the model
+    thickness: 0.64, // slab depth in the model (2x the original 0.32)
     attenuationColor: new THREE.Color(0.55, 0.85, 0.9),
     attenuationDistance: 1.2,
     specularIntensity: 1,
