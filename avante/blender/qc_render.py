@@ -28,8 +28,14 @@ for name, (loc, lens, tgt, focus, fs, res) in QC.items():
     co = bpy.data.objects.new('QC_' + name, cd); sc.collection.objects.link(co); co.location = loc
     co.rotation_euler = (Vector(tgt) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler()
     sc.camera = co
-    rig = bpy.data.objects.get('RIG_BackCard')
-    if rig and rig.constraints: rig.constraints[0].target = co
+    if bpy.data.objects.get('CRD_Foil_Strip'):  # v005 scene: back card + foil strip follow the camera
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import build_avante_master as B
+        co['foil_aim_z'] = {'roundel': 0.0422, 'neck': 0.2075, 'base': 0.0422}.get(name, 0.137)
+        B.aim_studio(co)
+    else:  # v004 and earlier
+        rig = bpy.data.objects.get('RIG_BackCard')
+        if rig and rig.constraints: rig.constraints[0].target = co
     sc.render.resolution_x, sc.render.resolution_y = res
     sc.render.filepath = os.path.join(outdir, f'{prefix}_{name}.png')
     bpy.ops.render.render(write_still=True)

@@ -1,0 +1,7 @@
+
+# v005: local-only (third-party reference photos must not go to the public repo; tests and screenshots)
+.DS_Store
+__pycache__/
+avante/blender/research/references/
+avante/blender/renders/v005_tests/
+avante/blender/renders/screenshots/

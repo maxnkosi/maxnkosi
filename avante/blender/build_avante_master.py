@@ -1,6 +1,9 @@
 """
-Avante Brandy — master scene builder (avante_master_v004)
+Avante Brandy — master scene builder (avante_master_v005)
 ==========================================================
+v005 (3 Nov 2026, research/v005_study): reference-led foil, emboss, paper and label pass.
+Client decisions: dyed-through navy stock, 0.15 mm label, bird/spear graphic toned down,
+angled macro cameras added, roundel keeps raised 0.04 mm foil. Run prep_v005_textures.py first.
 
 Builds the Concept 1 rev D packaging on the 750 ml Imperial bottle:
   GLS-01 glass · LIQ-01 brandy · SLV-CAP-01 closed-top navy shrink capsule + gold pinline
@@ -17,7 +20,7 @@ All dimensions in millimetres in the code; the scene is real-size in metres
 proposals from the Figma/Notion handoff and must be replaced by measurements.
 """
 import bpy, bmesh, math, os, sys
-from mathutils import Vector
+from mathutils import Vector, Quaternion
 
 MM = 0.001  # mm → metres
 
@@ -41,7 +44,9 @@ BORE = 26.0              # P neck bore
 CHAMFER = 0.0754         # P chamfer leg / side (W2124 ratio)
 N_RING = 256
 EDGE_SOFT = 0.7          # P vertical-edge softening (mm)
-LABEL_T = 0.10           # P paper thickness SUB-01 (mm)
+LABEL_T = 0.15           # D v005 client: dyed-through navy felt stock incl. adhesive (mm)
+LABEL_GAP = 0.005        # v005: adhesive-wetted contact, no air film (mm)
+LABEL_BEVEL = 0.025      # v005: softened die-cut edge (mm)
 EMB_H = 0.20             # P emboss height EMB-01 (mm)
 ROUNDEL_RELIEF = 0.04    # A stamped-foil relief on film (mm); stays within approved foil on film
 HEEL_R = 12.0            # A inner heel fillet radius (mm)
@@ -299,6 +304,26 @@ def noise(nt, scale, detail=2.0, stretch=None):
         nt.links.new(tc.outputs['Object'], n.inputs['Vector'])
     return n
 
+def uv_mm(nt, w, h):
+    """UV scaled to millimetres of artwork, so texture sizes are real and follow the sheet (v005)."""
+    tc = nt.nodes.new('ShaderNodeTexCoord'); mp = nt.nodes.new('ShaderNodeMapping')
+    mp.inputs['Scale'].default_value = (w, h, 1.0)
+    nt.links.new(tc.outputs['UV'], mp.inputs['Vector']); return mp.outputs[0]
+
+def noise_v(nt, vec, feature_mm, detail=2.0, stretch=None):
+    """Noise over a mm vector; feature_mm is the blob size. stretch=(sx, sy) elongates (fibres)."""
+    n = nt.nodes.new('ShaderNodeTexNoise'); n.inputs['Scale'].default_value = 1.0 / feature_mm
+    n.inputs['Detail'].default_value = detail
+    if stretch:
+        mp = nt.nodes.new('ShaderNodeMapping'); mp.inputs['Scale'].default_value = (stretch[0], stretch[1], 1.0)
+        nt.links.new(vec, mp.inputs['Vector']); vec = mp.outputs[0]
+    nt.links.new(vec, n.inputs['Vector']); return n.outputs['Fac']
+
+def map_range(nt, val, a, b, interp='SMOOTHSTEP'):
+    mr = nt.nodes.new('ShaderNodeMapRange'); mr.interpolation_type = interp
+    mr.inputs['From Min'].default_value = a; mr.inputs['From Max'].default_value = b
+    nt.links.new(val, mr.inputs['Value']); return mr.outputs[0]
+
 def math_node(nt, op, a=None, b=None):
     m = nt.nodes.new('ShaderNodeMath'); m.operation = op
     for i, v in enumerate((a, b)):
@@ -307,40 +332,53 @@ def math_node(nt, op, a=None, b=None):
         else: nt.links.new(v, m.inputs[i])
     return m.outputs[0]
 
-def mat_label(name, color, alpha, foil, emb=None, uv=None, back_white=False):
-    """SUB-01 felt paper, INK layer, VAR-01, FOIL-01, EMB-01, UV-01. Feature sizes are real mm in object space."""
+def foil_bsdf(nt, vec, pits=None):
+    """FOIL-01 hot foil, v005 (study A): a polished heated die leaves near-mirror tops. Paper texture
+    survives only as rare shallow pits (<= 6 um) plus a fine 0.13 mm grain (2 um); no mm-scale term
+    (that was the v004 'crumple'). Roughness 0.07 +- 0.015 at 0.12 mm. Colour stays FOIL_F0 (gold data)."""
+    fb = principled(nt, **{'Base Color': FOIL_F0, 'Metallic': 1.0})
+    fr = noise_v(nt, vec, 0.12, 2.0)
+    nt.links.new(math_node(nt, 'ADD', 0.055, math_node(nt, 'MULTIPLY', fr, 0.03)), fb.inputs['Roughness'])
+    grain = math_node(nt, 'MULTIPLY', noise_v(nt, vec, 0.13, 2.0), 2e-6)
+    # pits only in the deepest felt marks (about 5-10 % of the area), 3 um: first test at 0.30-0.48 / 6 um
+    # pitted nearly half of every letter, which mirror foil exaggerates into blotches
+    h = grain if pits is None else math_node(nt, 'ADD', grain, math_node(nt, 'MULTIPLY', map_range(nt, pits, 0.25, 0.35, 'SMOOTHERSTEP'), 3e-6))
+    bu = nt.nodes.new('ShaderNodeBump'); bu.inputs['Strength'].default_value = 1.0; bu.inputs['Distance'].default_value = 1.0
+    nt.links.new(h, bu.inputs['Height']); nt.links.new(bu.outputs[0], fb.inputs['Normal'])
+    return fb
+
+def mat_label(name, color, foil, art_wh, emb=None, uv=None):
+    """SUB-01 dyed-through navy felt paper, INK, VAR-01 (UV), FOIL-01, EMB-01. v005: all texture sizes
+    are real mm in label UV space (fibres follow the machine direction on every panel)."""
     m, nt, out = node_mat(name)
     T = tex_dir()
     c = img(nt, os.path.join(T, color), loc=(-900, 300))
     f = img(nt, os.path.join(T, foil), True, loc=(-900, -300))
-    # paper relief: 1.2 mm felt mark 0.02 mm, 0.25 x 1.2 mm fibre 0.005 mm
-    felt = noise(nt, 833.0); fibre = noise(nt, 1.0, 2.0, (4000, 800, 4000))
-    relief = math_node(nt, 'ADD', math_node(nt, 'MULTIPLY', felt.outputs[0], 4.5e-5), math_node(nt, 'MULTIPLY', fibre.outputs[0], 1.2e-5))
+    vec = uv_mm(nt, *art_wh)
+    # paper relief (metres), study C: felt pecks 0.6 mm at 30 um, body 1.2 mm at 10 um,
+    # fibres 1.2 x 0.25 mm at 6 um along the sheet (U)
+    vor = nt.nodes.new('ShaderNodeTexVoronoi'); vor.inputs['Scale'].default_value = 1 / 0.6
+    nt.links.new(vec, vor.inputs['Vector'])
+    peck = math_node(nt, 'MULTIPLY', map_range(nt, vor.outputs['Distance'], 0.0, 0.5), 30e-6)
+    body = noise_v(nt, vec, 1.2, 3.0)
+    fibre = noise_v(nt, vec, 1.0, 2.0, stretch=(1 / 1.2, 1 / 0.25))
+    relief = math_node(nt, 'ADD', peck, math_node(nt, 'ADD', math_node(nt, 'MULTIPLY', body, 10e-6), math_node(nt, 'MULTIPLY', fibre, 6e-6)))
     # bare paper (cream knock-out) versus inked area, from artwork luminance
     bw = nt.nodes.new('ShaderNodeRGBToBW'); nt.links.new(c.outputs['Color'], bw.inputs[0])
-    mr = nt.nodes.new('ShaderNodeMapRange'); mr.inputs['From Min'].default_value = 0.30; mr.inputs['From Max'].default_value = 0.60
-    nt.links.new(bw.outputs[0], mr.inputs['Value'])
-    bare = mr.outputs[0]
-    # ink relief is partly filled, roughness 0.58 +- 0.06; bare paper 0.78
-    rn = noise(nt, 300.0, 3.0)
-    ink_r = math_node(nt, 'ADD', 0.52, math_node(nt, 'MULTIPLY', rn.outputs[0], 0.12))
+    bare = map_range(nt, bw.outputs[0], 0.30, 0.60, 'LINEAR')
+    # ink roughness 0.66 +- 0.04; cream ink 0.78
+    ink_r = math_node(nt, 'ADD', 0.62, math_node(nt, 'MULTIPLY', noise_v(nt, vec, 0.4, 3.0), 0.08))
     rough = nt.nodes.new('ShaderNodeMix'); rough.data_type = 'FLOAT'
     nt.links.new(bare, rough.inputs['Factor']); nt.links.new(ink_r, rough.inputs['A']); rough.inputs['B'].default_value = 0.78
-    bscale = math_node(nt, 'ADD', 0.7, math_node(nt, 'MULTIPLY', bare, 0.3))
     bump = nt.nodes.new('ShaderNodeBump'); bump.inputs['Strength'].default_value = 1.0; bump.inputs['Distance'].default_value = 1.0
-    nt.links.new(math_node(nt, 'MULTIPLY', relief, bscale), bump.inputs['Height'])
-    # +-3% ink density from absorption into the sheet
-    dn = noise(nt, 1500.0, 2.0)
-    dens = nt.nodes.new('ShaderNodeBrightContrast')
-    nt.links.new(c.outputs['Color'], dens.inputs['Color']); nt.links.new(math_node(nt, 'MULTIPLY', math_node(nt, 'SUBTRACT', dn.outputs[0], 0.5), 0.06), dens.inputs['Bright'])
-    paper = principled(nt, **{'Sheen Weight': 0.08})
-    nt.links.new(dens.outputs[0], paper.inputs['Base Color']); nt.links.new(rough.outputs[0], paper.inputs['Roughness']); nt.links.new(bump.outputs[0], paper.inputs['Normal'])
-    # foil follows the sheet at half relief; roughness 0.18 +- 0.04
-    foilb = principled(nt, **{'Base Color': FOIL_F0, 'Metallic': 1.0})
-    fr = noise(nt, 800.0, 2.0)
-    nt.links.new(math_node(nt, 'ADD', 0.14, math_node(nt, 'MULTIPLY', fr.outputs[0], 0.08)), foilb.inputs['Roughness'])
-    fb = nt.nodes.new('ShaderNodeBump'); fb.inputs['Strength'].default_value = 1.0; fb.inputs['Distance'].default_value = 1.0
-    nt.links.new(math_node(nt, 'MULTIPLY', relief, 0.5), fb.inputs['Height']); nt.links.new(fb.outputs[0], foilb.inputs['Normal'])
+    nt.links.new(relief, bump.inputs['Height'])
+    # mottle: cloudy 6 mm, +-3 %, multiplicative (v004 was additive +-0.03, about +-30 % on navy)
+    hsv = nt.nodes.new('ShaderNodeHueSaturation')
+    nt.links.new(c.outputs['Color'], hsv.inputs['Color'])
+    nt.links.new(math_node(nt, 'ADD', 0.97, math_node(nt, 'MULTIPLY', noise_v(nt, vec, 6.0, 2.0), 0.06)), hsv.inputs['Value'])
+    paper = principled(nt, **{'Sheen Weight': 0.0, 'Specular IOR Level': 0.32})  # v005: no suede sheen
+    nt.links.new(hsv.outputs[0], paper.inputs['Base Color']); nt.links.new(rough.outputs[0], paper.inputs['Roughness']); nt.links.new(bump.outputs[0], paper.inputs['Normal'])
+    foilb = foil_bsdf(nt, vec, pits=body)
     mix = nt.nodes.new('ShaderNodeMixShader'); mix.location = (400, 0)
     nt.links.new(f.outputs['Color'], mix.inputs['Fac'])
     nt.links.new(paper.outputs[0], mix.inputs[1]); nt.links.new(foilb.outputs[0], mix.inputs[2])
@@ -349,26 +387,23 @@ def mat_label(name, color, alpha, foil, emb=None, uv=None, back_white=False):
         nt.links.new(u.outputs['Color'], paper.inputs['Coat Weight'])
         paper.inputs['Coat Roughness'].default_value = 0.08
     if emb:
-        # v003: true microdisplacement, EMB-01 about 0.2 mm (P)
+        # v005: rounded 16-bit height (prep_v005_textures.py), 0.2 mm peak, foil edge at the foot
         e = img(nt, os.path.join(T, emb), True, loc=(-900, -900))
         dsp = nt.nodes.new('ShaderNodeDisplacement'); dsp.location = (500, -400); dsp.space = 'OBJECT'
         dsp.inputs['Midlevel'].default_value = 0.0; dsp.inputs['Scale'].default_value = EMB_H * MM
         nt.links.new(e.outputs['Color'], dsp.inputs['Height'])
         nt.links.new(dsp.outputs[0], out.inputs['Displacement'])
         m.displacement_method = 'BOTH'
-    final = mix.outputs[0]
-    if back_white:  # the reverse of the sheet, seen through the clear back, is bare paper rather than navy
-        geo = nt.nodes.new('ShaderNodeNewGeometry'); dot = nt.nodes.new('ShaderNodeVectorMath'); dot.operation = 'DOT_PRODUCT'
-        nt.links.new(geo.outputs['Position'], dot.inputs[0]); nt.links.new(geo.outputs['Normal'], dot.inputs[1])
-        isback = math_node(nt, 'LESS_THAN', dot.outputs['Value'], 0.0)
-        rev = principled(nt, **{'Base Color': (0.86, 0.83, 0.76, 1), 'Roughness': 0.85})
-        mb = nt.nodes.new('ShaderNodeMixShader'); nt.links.new(isback, mb.inputs['Fac'])
-        nt.links.new(final, mb.inputs[1]); nt.links.new(rev.outputs[0], mb.inputs[2]); final = mb.outputs[0]
-    nt.links.new(final, out.inputs['Surface'])
+    nt.links.new(mix.outputs[0], out.inputs['Surface'])
     return m
 
 def mat_cut_edge():
-    return mat_simple('M_SUB-01_CutEdge', **{'Base Color': (0.90, 0.88, 0.82, 1), 'Roughness': 0.9})
+    # v005 client: dyed-through navy, so the die-cut core is navy (slightly lifted by exposed fibre)
+    return mat_simple('M_SUB-01_CutEdge_Navy', **{'Base Color': tuple(min(x * 1.25, 1) for x in NAVY[:3]) + (1,), 'Roughness': 0.9})
+
+def mat_reverse():
+    # v005: reverse of the dyed sheet against the glass, wetted by adhesive: darker, no own shine, no relief
+    return mat_simple('M_SUB-01_Reverse_Wetted', **{'Base Color': tuple(x * 0.8 for x in NAVY[:3]) + (1,), 'Roughness': 0.85, 'Specular IOR Level': 0.2})
 
 def mat_roundel():
     m, nt, out = node_mat('M_LBL-ROUNDEL-01_ClearFilm')
@@ -377,12 +412,11 @@ def mat_roundel():
     f = img(nt, os.path.join(T, 'MASK-FOIL-01__LBL-ROUNDEL-01.png'), True, loc=(-900, -100))
     ink = principled(nt, **{'Roughness': 0.5})
     nt.links.new(c.outputs['Color'], ink.inputs['Base Color'])
-    foilb = principled(nt, **{'Base Color': FOIL_F0, 'Metallic': 1.0})
-    fr = noise(nt, 800.0, 2.0)
-    nt.links.new(math_node(nt, 'ADD', 0.14, math_node(nt, 'MULTIPLY', fr.outputs[0], 0.08)), foilb.inputs['Roughness'])
+    foilb = foil_bsdf(nt, uv_mm(nt, ROUNDEL_TEX, ROUNDEL_TEX))  # on film: no paper pits
     mix = nt.nodes.new('ShaderNodeMixShader'); nt.links.new(f.outputs['Color'], mix.inputs['Fac'])
     nt.links.new(ink.outputs[0], mix.inputs[1]); nt.links.new(foilb.outputs[0], mix.inputs[2])
-    film = principled(nt, **{'Roughness': 0.04, 'IOR': 1.49, 'Transmission Weight': 1.0})  # SUB-02 clear film
+    # SUB-02 clear film. v005 fix: Base Color white (v004 left the 0.8 default, which greyed the ring)
+    film = principled(nt, **{'Base Color': (1, 1, 1, 1), 'Roughness': 0.04, 'IOR': 1.49, 'Transmission Weight': 1.0})
     uvn = nt.nodes.new('ShaderNodeTexCoord')
     sub = nt.nodes.new('ShaderNodeVectorMath'); sub.operation = 'SUBTRACT'; sub.inputs[1].default_value = (0.5, 0.5, 0)
     ln = nt.nodes.new('ShaderNodeVectorMath'); ln.operation = 'LENGTH'
@@ -572,17 +606,29 @@ def clipped_grid(us, vs, sdf, pos, uvf):
             if len(poly) >= 3: faces.append(tuple(poly))
     return verts, uvs, faces
 
+def paper_shell(ob, mat, thickness=LABEL_T):
+    """v005: solidify the sheet so the glass-side face (the original surface) gets the wetted reverse,
+    the new outer shell gets the printed face and the rim gets the navy die-cut core, then soften the
+    cut edge. The reverse has no displacement, so the emboss no longer pushes into the glass.
+    Measured in 5.1: with offset +1 the new (outer) shell keeps the base index and the original
+    (glass-side) faces take material_offset."""
+    ob.data.materials.append(mat)                # 0: printed face (outer shell)
+    ob.data.materials.append(mat_cut_edge())     # 1: rim
+    ob.data.materials.append(mat_reverse())      # 2: reverse (original faces, glass side)
+    sol = ob.modifiers.new('paper', 'SOLIDIFY'); sol.thickness = thickness * MM; sol.offset = 1.0
+    sol.use_rim = True; sol.use_even_offset = True
+    sol.material_offset = 2; sol.material_offset_rim = 1
+    bev = ob.modifiers.new('cut_edge', 'BEVEL'); bev.width = LABEL_BEVEL * MM; bev.segments = 2
+    bev.limit_method = 'ANGLE'; bev.angle_limit = math.radians(60)
+    shade_smooth(ob, 30)
+
 def finish_label(ob, uvs, mat, thickness=LABEL_T, outward_check=None):
     uvl = ob.data.uv_layers.new(name='UVMap')
     for p in ob.data.polygons:
         for li, vi in zip(p.loop_indices, p.vertices): uvl.data[li].uv = uvs[vi]
     recalc_normals(ob)
     if outward_check and outward_check(ob): recalc_normals(ob, inside=True)
-    ob.data.materials.append(mat)
-    sol = ob.modifiers.new('paper', 'SOLIDIFY'); sol.thickness = thickness * MM; sol.offset = 1.0
-    sol.use_rim = True; sol.use_even_offset = True
-    ob.data.materials.append(mat_cut_edge()); sol.material_offset_rim = 1  # die-cut core, not ink
-    shade_smooth(ob, 30)
+    paper_shell(ob, mat, thickness)
 
 def build_wrap(C):
     s_vals = sorted(set([round(-122.5 + 0.5 * i, 3) for i in range(491)] + [-S1_E, -HF_E, HF_E, S1_E]))
@@ -590,11 +636,11 @@ def build_wrap(C):
     verts, uvs, faces = clipped_grid(
         s_vals, v_vals,
         lambda u, v: poly_sdf(dev_xy(u, v), TRIM),
-        lambda u, v: surf_xyz(u, v, 0.03),
+        lambda u, v: surf_xyz(u, v, LABEL_GAP),
         lambda u, v: ((dev_xy(u, v)[0] - WRAP_ART['x']) / WRAP_ART['w'], 1 - (dev_xy(u, v)[1] - WRAP_ART['y']) / WRAP_ART['h']))
     ob = mesh_from('LBL-FRONT-01_Wrap', verts, faces, C)
-    mat = mat_label('M_LBL-FRONT-01_SUB-01_Paper', 'COLOR__LBL-FRONT-01.png', None,
-                    'MASK-FOIL-01__LBL-FRONT-01.png', 'MASK-EMB-01__LBL-FRONT-01.png', 'MASK-UV-01__LBL-FRONT-01.png', back_white=True)
+    mat = mat_label('M_LBL-FRONT-01_SUB-01_Paper', 'COLOR__LBL-FRONT-01_v005.png', 'MASK-FOIL-01__LBL-FRONT-01.png',
+                    (WRAP_ART['w'], WRAP_ART['h']), 'HEIGHT-EMB-01__LBL-FRONT-01.exr', 'MASK-UV-01__LBL-FRONT-01.png')
     def facing_in(o):
         ps = [p for p in o.data.polygons if abs(p.center.x) < 0.01]
         return bool(ps) and sum(p.normal.y for p in ps) > 0
@@ -606,8 +652,14 @@ def build_wrap(C):
     return ob
 
 # --- collar --------------------------------------------------------------------
+def capsule_outer_max(z0, z1):
+    """Largest capsule outer radius (film included) over a height band, so labels sit on, not in, the film."""
+    return max(capsule_r(2 * math.pi * i / N_RING, z0 + (z1 - z0) * k / 40)
+               for i in range(N_RING) for k in range(41)) + 0.05
+
 def build_collar(C):
-    rc = NECK_D / 2 + 0.06 + 0.14  # clears the capsule pleats
+    # v005 fix: v004 used a fixed 17.25 mm, under the pleated film (17.32-17.56 mm)
+    rc = capsule_outer_max(COLLAR_BOT, COLLAR_TOP) + LABEL_GAP
     L = 2 * COLLAR_F + COLLAR_C
     def uv(s, z):
         return ((COLLAR_BLEED + s) / COLLAR_ART_W, 1 - (COLLAR_BLEED + (COLLAR_TOP - z)) / COLLAR_ART_H)
@@ -630,20 +682,22 @@ def build_collar(C):
         return math.hypot(sv - x, z - zm) - Rr
     zs_f = [COLLAR_BOT + (COLLAR_TOP - COLLAR_BOT) * k / 28 for k in range(29)]
     ds = [COLLAR_F * k / 48 for k in range(49)]
-    for ply, yoff, sfun in (('front', -0.12, lambda d: COLLAR_F + COLLAR_C + d), ('back', 0.12, lambda d: COLLAR_F - d)):
+    # v005: plies glued back to back (0.01 mm), with a slight paper-memory curl of 0.6 mm at the tip
+    curl = lambda d: -0.6 * (d / COLLAR_F) ** 2
+    for ply, yoff, sfun in (('front', -0.01, lambda d: COLLAR_F + COLLAR_C + d), ('back', 0.01, lambda d: COLLAR_F - d)):
         fv, fu, ff = clipped_grid(ds, zs_f, lambda d, z: stadium_sdf(sfun(d), z),
-                                  lambda d, z: ((rc + d) * MM, yoff * MM, z * MM), lambda d, z: uv(sfun(d), z))
+                                  lambda d, z: ((rc + d) * MM, (yoff + curl(d)) * MM, z * MM), lambda d, z: uv(sfun(d), z))
         base = len(verts); verts += fv; uvs += fu
-        for f in ff: faces.append(tuple(base + i for i in (f if ply == 'back' else reversed(f))))
+        # v005: each ply faces outward, so its solidify shell (printed face) grows away from the other ply.
+        # (v004's inward faces were hidden because both shells shared one material; with the printed/reverse
+        # split the back ply's art showed through the front ply mirrored.)
+        for f in ff: faces.append(tuple(base + i for i in (reversed(f) if ply == 'back' else f)))
     ob = mesh_from('LBL-NECK-01_Collar', verts, faces, C)
-    mat = mat_label('M_LBL-NECK-01_SUB-01_Paper', 'COLOR__LBL-NECK-01.png', None, 'MASK-FOIL-01__LBL-NECK-01.png')
+    mat = mat_label('M_LBL-NECK-01_SUB-01_Paper', 'COLOR__LBL-NECK-01.png', 'MASK-FOIL-01__LBL-NECK-01.png', (COLLAR_ART_W, COLLAR_ART_H))
     uvl = ob.data.uv_layers.new(name='UVMap')
     for p in ob.data.polygons:
         for li, vi in zip(p.loop_indices, p.vertices): uvl.data[li].uv = uvs[vi]
-    ob.data.materials.append(mat)
-    sol = ob.modifiers.new('paper', 'SOLIDIFY'); sol.thickness = LABEL_T * MM; sol.offset = 1.0; sol.use_rim = True
-    ob.data.materials.append(mat_cut_edge()); sol.material_offset_rim = 1
-    shade_smooth(ob, 30)
+    paper_shell(ob, mat)
     return ob
 
 # --- roundel ------------------------------------------------------------------
@@ -711,12 +765,59 @@ def soft_card(C, name, loc, w, h, strength, target, colour=(1, 1, 1, 1), black=F
     ob.data.materials.append(m)
     return ob
 
-def aim_back_card(cam=None):
-    """Keep CRD_Brandy_Back directly behind the bottle as seen from the active camera."""
+def foil_card(C, name, w, h, strength, receivers):
+    """v005 (studies A, D): narrow gradient strip that the foil mirrors. Bright band over the top of the
+    letters, smooth fall-off to black below, soft ends; everything else the foil sees is the dark world,
+    so off-angle foil and emboss shoulders go deep. Light-linked to the labels only."""
+    hw, hh = w / 2, h / 2
+    ob = mesh_from(name, [(-hw, -hh, 0), (hw, -hh, 0), (hw, hh, 0), (-hw, hh, 0)], [(0, 1, 2, 3)], C)
+    ob.visible_camera = False; ob.visible_diffuse = False; ob.visible_shadow = False
+    m, nt, out = node_mat('M_' + name)
+    tc = nt.nodes.new('ShaderNodeTexCoord'); sep = nt.nodes.new('ShaderNodeSeparateXYZ')
+    nt.links.new(tc.outputs['Object'], sep.inputs[0])
+    fy = map_range(nt, sep.outputs['Y'], -0.4 * hh, 0.1 * hh, 'SMOOTHERSTEP')           # fall-off below the band
+    ax = math_node(nt, 'ABSOLUTE', sep.outputs['X'])
+    fx = math_node(nt, 'SUBTRACT', 1.0, map_range(nt, ax, 0.6 * hw, hw, 'SMOOTHSTEP'))   # soft ends
+    em = nt.nodes.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (1.0, 0.98, 0.95, 1)
+    s = math_node(nt, 'MULTIPLY', math_node(nt, 'MULTIPLY', fy, fx), strength); s.node.name = 'STRENGTH'
+    nt.links.new(s, em.inputs['Strength'])
+    nt.links.new(em.outputs[0], out.inputs['Surface']); ob.data.materials.append(m)
+    ob['base_strength'] = strength
+    try: ob.light_linking.receiver_collection = receivers
+    except Exception as e: print('AVANTE_WARN light linking unavailable:', e)
+    return ob
+
+def aim_studio(cam=None):
+    """Point the camera-dependent cards at the active camera:
+    - CRD_Brandy_Back stays directly behind the bottle (constraint);
+    - CRD_Foil_Strip sits where the foil mirrors the camera: card = p + 2(n.v)n - v, v = camera - p,
+      with p on the front face at the camera's 'foil_aim_z' and n the face normal, which tilts down
+      by the bottle taper (about 4 deg at the wordmark; a flat -Y mirror missed the strip)."""
     sc = bpy.context.scene
     cam = cam or sc.camera
     bpy.data.objects['RIG_BackCard'].constraints[0].target = cam
     sc.camera = cam
+    def place(card, pz):
+        pz /= MM
+        p = Vector((0.0, -width_at(pz) / 2 * MM, pz * MM))
+        dw = (width_at(pz + 0.5) - width_at(pz - 0.5)) / 2  # half-width change per mm
+        n = Vector((0.0, -1.0, -dw)).normalized()
+        v = cam.matrix_world.translation - p
+        r = 2 * n.dot(v) * n - v
+        if r.z < 0 and p.z + r.z < 0.02:  # mirror points into the floor: card stands on the table instead
+            r *= (0.02 - p.z) / r.z
+        card.location = p + r; look_at(card, p)
+    card, card2 = bpy.data.objects.get('CRD_Foil_Strip'), bpy.data.objects.get('CRD_Foil_Strip_Roundel')
+    if card:
+        aim = cam.get('foil_aim_z', 0.137)
+        place(card, aim)
+        # per-camera strip level: the roundel shots clipped the foil to near-white at the full level
+        card.active_material.node_tree.nodes['STRENGTH'].inputs[1].default_value = card['base_strength'] * cam.get('foil_strength', 1.0)
+        if card2:  # second strip for the roundel in wide shots; off when the camera is about the roundel
+            place(card2, ROUNDEL_Z * MM); card2.hide_render = abs(aim - ROUNDEL_Z * MM) < 0.01
+        bpy.context.view_layer.update()
+
+aim_back_card = aim_studio  # v004 name, kept for scripts
 
 def build_studio(C):
     sc = bpy.context.scene
@@ -736,39 +837,61 @@ def build_studio(C):
     for pl in me.polygons: pl.use_smooth = True
     # world
     wd = sc.world or bpy.data.worlds.new('World'); sc.world = wd; wd.use_nodes = True
-    bg = wd.node_tree.nodes.get('Background'); bg.inputs[0].default_value = (0.02, 0.02, 0.022, 1); bg.inputs[1].default_value = 1.0
+    bg = wd.node_tree.nodes.get('Background'); bg.inputs[0].default_value = (0.003, 0.003, 0.0033, 1); bg.inputs[1].default_value = 1.0  # v005: near-black, so foil off-angle goes deep
     tgt = (0, 0, 0.12)
     # v003 product-photography rig
     area_light(C, 'LGT_Key_Softbox', (-0.72, -0.42, 0.42), 0.9, 10.5, tgt, size_y=1.2)   # large, off-axis: keeps the matte label from washing out
     area_light(C, 'LGT_Rim_L_Strip', (-0.30, 0.08, 0.13), 0.05, 3.2, tgt, size_y=0.8)   # glass edge lines
     area_light(C, 'LGT_Rim_R_Strip', (0.30, 0.08, 0.13), 0.05, 3.2, tgt, size_y=0.8)
-    area_light(C, 'LGT_Top', (0.05, -0.05, 0.65), 0.6, 0.45, tgt)
-    area_light(C, 'LGT_Fill_Low', (0.55, -0.55, 0.08), 0.5, 0.5, tgt)
-    # black flags: stop rim spill on the backdrop and hold dark glass edges (not seen directly)
+    area_light(C, 'LGT_Top', (0.05, -0.05, 0.65), 0.6, 0.45, tgt, size_y=0.6)        # v005 fix: square, as intended
+    area_light(C, 'LGT_Fill_Low', (0.55, -0.55, 0.08), 0.5, 0.5, tgt, size_y=0.5)
+    # black flags: hold dark glass edges in reflection (not seen directly). Shadow visibility stays off:
+    # a v005 test with shadows on threw a hard curved shadow edge across the backdrop in the 3/4 view
     for nm, x in (('FLG_Black_L', -0.16), ('FLG_Black_R', 0.16)):
         fl = soft_card(C, nm, (x, 0.27, 0.25), 0.38, 0.6, None, (0, 0.27, 0.25), black=True)
         fl.rotation_euler = (math.pi / 2, 0, math.pi / 2); fl.visible_shadow = False
     # cards keep to reflections and refractions only, so they never appear in frame
     rig = bpy.data.objects.new('RIG_BackCard', None); C.objects.link(rig)
-    back = soft_card(C, 'CRD_Brandy_Back', (0, 0.085, 0.092), 0.15, 0.14, 1.7, (0, -1, 0.092), colour=(1.0, 0.93, 0.82, 1))
-    back.parent = rig   # always behind the bottle from the active camera (see aim_back_card)
+    # v005: larger than the liquid seen through the flat faces, so its soft edge never lands in the
+    # liquid (the v004 tonal step); weaker and less orange (the peachy top)
+    back = soft_card(C, 'CRD_Brandy_Back', (0, 0.085, 0.095), 0.17, 0.24, 1.25, (0, -1, 0.095), colour=(1.0, 0.95, 0.88, 1))
+    back.parent = rig   # always behind the bottle from the active camera (see aim_studio)
     tc = rig.constraints.new('LOCKED_TRACK'); tc.track_axis = 'TRACK_NEGATIVE_Y'; tc.lock_axis = 'LOCK_Z'
-    soft_card(C, 'CRD_Foil_Specular', (0.0, -0.55, 0.075), 1.1, 0.42, 0.95, (0, 0, 0.13), colour=(1.0, 0.97, 0.92, 1))
-    # cameras (macros: 2000x1600; focus distance measured to the label face)
-    for name, loc, lens, tgt2, focus, fstop in (
-            ('CAM_Hero', (0.0, -0.74, 0.13), 85, (0, 0, 0.119), None, None),
-            ('CAM_ThreeQuarter', (0.42, -0.6, 0.16), 85, (0, 0, 0.119), None, None),
-            ('CAM_Macro_Avante', (0.0, -0.28, 0.137), 100, (0, 0, 0.137), 0.235, 16),
-            ('CAM_Macro_Roundel', (0.0, -0.28, 0.0422), 100, (0, 0, 0.0422), 0.242, 8),
-            ('CAM_Macro_CollarFlag', (0.06, -0.2, 0.216), 100, (0.027, 0, 0.2075), 0.205, 11)):
+    # v005: CRD_Foil_Specular (1.1 x 0.42 m, flat, everywhere in the foil's mirror) is replaced by a
+    # narrow gradient strip placed in the mirror direction of the active camera (aim_studio)
+    foil_card(C, 'CRD_Foil_Strip', 0.30, 0.08, 9.0, bpy.data.collections['GEO_Labels'])
+    # roundel strip: small and dimmer (it stands close, on the table) and linked to the roundel only, so it
+    # neither washes the roundel's navy ink nor glints in the wrap's spot-UV varnish
+    lnk = bpy.data.collections.get('LNK_Roundel') or bpy.data.collections.new('LNK_Roundel')
+    lnk.objects.link(bpy.data.objects['LBL-ROUNDEL-01_Roundel'])
+    foil_card(C, 'CRD_Foil_Strip_Roundel', 0.12, 0.04, 6.0, lnk)
+    # cameras (macros: 2000x1600; focus distance measured to the label face). foil_aim_z = foil height
+    # the camera is about. v005 angled cameras (study D): long lens, turned off square, rolled.
+    for name, loc, lens, tgt2, focus, fstop, aimz, roll in (
+            ('CAM_Hero', (0.0, -0.74, 0.13), 85, (0, 0, 0.119), None, None, 0.137, 0),
+            ('CAM_ThreeQuarter', (0.42, -0.6, 0.16), 85, (0, 0, 0.119), None, None, 0.137, 0),
+            ('CAM_Macro_Avante', (0.0, -0.28, 0.137), 100, (0, 0, 0.137), 0.235, 16, 0.137, 0),
+            ('CAM_Macro_Roundel', (0.0, -0.28, 0.0422), 100, (0, 0, 0.0422), 0.242, 8, 0.0422, 0),
+            ('CAM_Macro_CollarFlag', (0.06, -0.2, 0.216), 100, (0.027, 0, 0.2075), 0.205, 11, 0.2075, 0),
+            ('CAM_Angle_Avante', None, 135, (0.0, -0.045, 0.139), 0.30, 16, 0.139, 25),
+            ('CAM_Angle_Roundel', None, 135, (0.0, -0.038, 0.0422), 0.30, 11, 0.0422, -20),
+            ('CAM_Angle_CollarFlag', None, 100, (0.03, 0.0, 0.2075), 0.26, 11, 0.2075, 15)):
         cd = bpy.data.cameras.new(name); cd.lens = lens
         if focus:
             cd.dof.use_dof = True; cd.dof.aperture_fstop = fstop; cd.dof.focus_distance = focus
+        if loc is None:  # angled: yaw/elevation per shot, at the focus distance from the subject
+            yaw, el = {'CAM_Angle_Avante': (20, 8), 'CAM_Angle_Roundel': (-18, 6), 'CAM_Angle_CollarFlag': (28, 16)}[name]
+            y, e = math.radians(yaw), math.radians(el)
+            loc = tuple(t + focus * d for t, d in zip(tgt2, (math.sin(y) * math.cos(e), -math.cos(y) * math.cos(e), math.sin(e))))
         co = bpy.data.objects.new(name, cd); C.objects.link(co); co.location = loc; look_at(co, tgt2)
+        co['foil_aim_z'] = aimz
+        if 'Roundel' in name: co['foil_strength'] = 0.5
+        if roll:
+            co.rotation_euler = (co.rotation_euler.to_quaternion() @ Quaternion((0, 0, 1), math.radians(roll))).to_euler()
     # turntable: 120 frames, one linear orbit
     tt = bpy.data.objects.new('RIG_Turntable', None); C.objects.link(tt); tt.location = (0, 0, 0.119)
     cd = bpy.data.cameras.new('CAM_Turntable'); cd.lens = 85
-    co = bpy.data.objects.new('CAM_Turntable', cd); C.objects.link(co); co.parent = tt
+    co = bpy.data.objects.new('CAM_Turntable', cd); C.objects.link(co); co.parent = tt; co['foil_aim_z'] = 0.137
     co.location = (0, -0.8, 0.03); look_at(co, (0, 0, 0))
     tt.rotation_euler = (0, 0, 0); tt.keyframe_insert('rotation_euler', index=2, frame=1)
     tt.rotation_euler = (0, 0, 2 * math.pi); tt.keyframe_insert('rotation_euler', index=2, frame=121)
@@ -786,7 +909,7 @@ def render_settings(samples=128, res=(1000, 1600)):
     sc.cycles.max_bounces = 32; sc.cycles.transmission_bounces = 24; sc.cycles.glossy_bounces = 12
     sc.cycles.transparent_max_bounces = 24; sc.cycles.volume_bounces = 4
     sc.cycles.caustics_reflective = False; sc.cycles.caustics_refractive = False
-    sc.cycles.blur_glossy = 0.2; sc.cycles.adaptive_threshold = 0.005; sc.cycles.sample_clamp_indirect = 10.0
+    sc.cycles.blur_glossy = 0.0; sc.cycles.adaptive_threshold = 0.005; sc.cycles.sample_clamp_indirect = 10.0  # v005: no glossy blur on mirror foil
     sc.render.resolution_x, sc.render.resolution_y = res
     sc.unit_settings.system = 'METRIC'; sc.unit_settings.length_unit = 'MILLIMETERS'
     try:

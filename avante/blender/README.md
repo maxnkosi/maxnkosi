@@ -1,4 +1,4 @@
-# Avante Brandy — Blender master scene (v004)
+# Avante Brandy — Blender master scene (v005)
 
 Concept 1 rev D packaging on the 750 ml Imperial bottle, built procedurally from the
 Figma/Notion handoff (Figma file `JcxeRDhCrtgZUXhTWQn2hV`, pages 01–03).
@@ -66,3 +66,32 @@ collar 23.66–37.64 mm, roundel centre 195.9 mm, inner volume 750.0 ml).
 - Studio: off-axis key, strip rims, flags, camera-invisible back and foil cards, AgX with no look, CAM_Turntable (120 frames), roundel and flag macro cameras.
 
 `qc_render.py` renders the fixed comparison cameras into `renders/qc/`. Specialist reports are in `research/`; most numeric values there are artistic, as each report states.
+
+## v005 changes (3 Nov 2026)
+
+`avante_master_v005.blend` is current; v001–v004 are untouched. Based on the reference study in
+`research/v005_study/` (`00_SYNTHESIS.md`). Rebuild order: `prep_v005_textures.py`, then `build_avante_master.py`.
+Finals: `render_finals.py -- v005 512` (aims the camera-dependent cards for each camera).
+
+Client decisions applied: dyed-through navy stock (navy cut edge and reverse), 0.15 mm label,
+bird/spear graphic toned down to dL* 7 above the navy (#286789 to #0E4765, render-side texture
+`COLOR__LBL-FRONT-01_v005.png`; Figma artwork untouched), angled macro cameras added, roundel keeps raised 0.04 mm foil.
+
+- Foil: paper felt bump removed from the foil (the v004 "crumple"); rare 3 um pits plus 2 um grain at 0.13 mm;
+  roughness 0.07 ± 0.015; glossy blur 0.
+- Foil lighting: the 1.1 × 0.42 m flat card is replaced by narrow gradient strips placed in the mirror direction of
+  the active camera (allowing for the 4° face taper), light-linked to the labels; a second small strip for the
+  roundel stands on the table when its mirror points into the floor. World near-black (0.003).
+- Emboss: rounded 16-bit height map (`HEIGHT-EMB-01__LBL-FRONT-01.exr`, 40 px/mm, 0.15 mm Gaussian shoulder,
+  foil edge at the foot, thin strokes lower) instead of a hard-stepped 8-bit mask.
+- Paper: sheen 0, specular 0.32, felt pecks 0.6 mm at 30 um, body 10 um, fibres along the sheet in label-UV mm
+  (v004 fibres ran into the front panel); multiplicative 6 mm mottle ±3 % (v004 additive, about ±30 % on navy).
+- Label: 0.15 mm, 0.005 mm from the glass, 0.025 mm bevelled cut edge, wetted navy reverse on the glass side with
+  no displacement (v004 displaced the reverse too). Collar plies glued back to back with a 0.6 mm tip curl.
+- Fixes: roundel film base colour white (v004 grey ring); collar radius now clears the pleated capsule
+  (17.25 → 17.64 mm); LGT_Top and LGT_Fill_Low square as intended. Black flags keep shadows off (with shadows on
+  they threw a hard edge across the backdrop) — they act only in reflection.
+- Liquid: back card enlarged to 0.17 × 0.24 m, strength 1.25, less orange.
+- Cameras: `CAM_Angle_Avante` (135 mm, 25° roll), `CAM_Angle_Roundel` (135 mm, −20°), `CAM_Angle_CollarFlag`
+  (100 mm, 15°). Each camera carries `foil_aim_z`.
+- Not done: macro artwork re-export at about 50 px/mm (still 20 px/mm), AgX contrast look (kept "None").
