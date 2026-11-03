@@ -15,7 +15,9 @@ chk('Glass max width X (mm)', g[1] - g[0], 89.0, 0.5)
 c = bb('SLV-CAP-01_Capsule'); chk('Overall height with capsule (mm)', c[5], 238.1, 0.05)
 chk('Capsule skirt bottom, from cap top (mm)', 238.1 - c[4], 66.27, 0.05)
 D = getattr(B, 'LABEL_DROP', 0.0)  # v008 client: label moved down
-w = bb('LBL-FRONT-01_Wrap'); chk('Wrap crown, from cap top (mm)', 238.1 - w[5], 79.64 + D, 0.6)
+RD2 = getattr(B, 'REVD2_INFO', None)  # v009 client decision: rev D.2 die follows the arch
+CROWN = RD2['crown_from_cap'] if RD2 else 79.64 + D
+w = bb('LBL-FRONT-01_Wrap'); chk('Wrap crown, from cap top (mm)', 238.1 - w[5], CROWN, 0.6)
 chk('Wrap bottom (front), from cap top (mm)', 238.1 - w[4], 165.9 + D, 3.5)
 n = bb('LBL-NECK-01_Collar'); chk('Collar top, from cap top (mm)', 238.1 - n[5], 23.66, 0.05); chk('Collar bottom, from cap top (mm)', 238.1 - n[4], 37.64, 0.05)
 r = bb('LBL-ROUNDEL-01_Roundel'); chk('Roundel centre, from cap top (mm)', 238.1 - (r[4] + r[5]) / 2, 195.9, 0.05); chk('Roundel film Ø (mm)', r[1] - r[0], 46.71, 0.1)
@@ -31,15 +33,16 @@ if getattr(B, 'GLASS_V007', None):  # v007 shoulder checks (research/v006_study/
             if P - onp(np.array([th]), z)[0] > carve: return float(z)
         return float('nan')
     oc, ov = onset(C0), onset(CV)
-    chk('12a Arch onset, panel centre (mm)', oc, 154.05, 0.5); chk('12b Arch onset, face/chamfer vertex (mm)', ov, 142.4, 0.7)  # rho 7, chamfer 0.05: 13b target less the rho-7 setback (2.75)
+    chk('12a Arch onset, panel centre (mm)', oc, 154.05, 0.5); chk('12b Arch onset, corner (mm)', ov, 141.0, 0.7)  # v009 rounded corner R 4.5 (client); 13b less the rho-7 setback (2.75)
     cc, cv = float(cre(np.array([C0]))[0]), float(cre(np.array([CV]))[0])
-    chk('13a Sharp crease, centre (mm)', cc, 156.6, 0.5); chk('13b Sharp crease, corner (mm)', cv, 145.2, 0.7)  # v008 chamfer 0.05: E reads 145.0-145.9 on raw2 for a 4-5 mm leg
-    chk('13c Arch rise (mm)', cc - cv, 11.4, 0.75)  # raw2: 10.5 predicted to 11.7 measured (E iso-contour)
+    chk('13a Sharp crease, centre (mm)', cc, 156.6, 0.5); chk('13b Sharp crease, corner (mm)', cv, 143.75, 0.7)  # v009 rounded corner R 4.5 (client): geometric consequence, refs had a chamfer
+    chk('13c Arch rise (mm)', cc - cv, 12.9, 0.75)  # v009 rounded corner: corner sits further out, so a taller arch than raw2 (11.7)
     zs = np.arange(140.0, 192.0, 0.25)
     dev = max(abs(onp(np.array([0.0]), z)[0] + onp(np.array([math.pi]), z)[0] - B.width_at(z)) for z in zs)
     chk('14 Front silhouette vs PROFILE 140-192, max dev (mm)', dev, 0.0, 0.7)
     d145, d150 = (2 * onp(np.array([math.pi / 4]), z)[0] for z in (145.0, 150.0))
-    chk('15a 45 deg diagonal width z145, >= 115.4 (mm)', min(d145, 115.4), 115.4, 0.0)  # ruling 115.5 was for rho 4; rho 7 + cap blend give 115.497; print('INFO diag145', round(d145, 2), 'diag150', round(d150, 2))
+    chk('15a 45 deg diagonal width z145, >= 115.4 (mm)', min(d145, 115.4), 115.4, 0.0)  # ruling 115.5 was for rho 4
+    print('INFO diag145', round(d145, 2), 'diag150', round(d150, 2))
     chk('15b 45 deg diagonal width z150, >= 105.0 (mm)', min(d150, 105.0), 105.0, 0.0)
     brk = 0.0
     for zj in (147.5, V['ZTN'], V['ZCN']):
@@ -53,12 +56,19 @@ if getattr(B, 'GLASS_V007', None):  # v007 shoulder checks (research/v006_study/
     chk('21 Inner bore, max step between 0.15 mm rows (mm)', max(abs(a - b) for a, b in zip(rb, rb[1:])), 0.0, 0.05)
     wl = np.mean([(onp(np.array([0.0]), z)[0] - inp(np.array([0.0]), z, rep['base_thickness_mm'])[0]) / V['QC'] for z in np.arange(161.0, 170.0, 1.0)])
     chk('22 Wall along the normal on the cone (mm)', wl, 3.6, 0.2)
-    chk('23a Wrap crown, tight (mm)', 238.1 - w[5], 79.64 + D, 0.3); chk('23b Wrap bottom, tight (mm)', 238.1 - w[4], 165.9 + D, 0.5)
+    chk('23a Wrap crown, tight (mm)', 238.1 - w[5], CROWN, 0.3); chk('23b Wrap bottom, tight (mm)', 238.1 - w[4], 165.9 + D, 0.5)
     # W1: die-edge clearance = arch onset - label top, at the front centre and the front/chamfer fold (WARN only)
     me = bpy.data.objects['LBL-FRONT-01_Wrap'].data
     for nm, th, on in (('front centre', C0, oc), ('front/chamfer fold', CV, ov)):
         zt = max((v.co.z / B.MM for v in me.vertices if abs(math.atan2(v.co.y, v.co.x) - th) < 0.012), default=float('nan'))
-        warns.append((f'W1 Die-edge clearance, {nm} (mm)', round(on - zt, 2), 'client decision: rev D.2 die / trial / custom mould'))
+        if RD2:  # rev D.2: clearance is a requirement (>= 1.5 mm, design 2.0)
+            chk(f'24 Die-edge clearance below arch onset, {nm}, >= 1.5 (mm)', min(on - zt, 1.5), 1.5, 0.0); print('INFO clearance', nm, round(on - zt, 2))
+        else:
+            warns.append((f'W1 Die-edge clearance, {nm} (mm)', round(on - zt, 2), 'client decision: rev D.2 die / trial / custom mould'))
+    # label bottom to roundel film top (front centre): must not touch; warn under 2 mm
+    gap = (238.1 - (r[4] + r[5]) / 2 - (r[5] - r[4]) / 2) - (238.1 - w[4])
+    chk('25 Label bottom to roundel top, no overlap (mm)', min(gap, 0.0) if gap < 0 else 0.0, 0.0, 0.0)
+    if gap < 2.0: warns.append(('W2 Label bottom to roundel gap (mm)', round(gap, 2), 'under 2 mm: tight for labelling tolerance'))
     print('V007_INFO', {k: (round(v, 3) if isinstance(v, float) else v) for k, v in B.GLASS_V007_INFO.items()})
 for row in rows: print('CHECK', *row, sep=' | ')
 for row in warns: print('WARN', *row, sep=' | ')

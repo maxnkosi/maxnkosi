@@ -38,12 +38,27 @@ def install(B):
     g = {}
 
     # ---------------------------------------------------------------- prism (stable soft-min, k per ray)
-    def sq_np(th, S, k=EDGE_SOFT):
-        h, a = S / 2, CH * S
+    CR = getattr(B, 'CORNER_R', 0.0)
+    def sq_np(th, S, k=EDGE_SOFT, R=None):
+        """Body section radius on ray th. CHAMFER > 0: chamfered square with soft-min edges (v007/v008).
+        CHAMFER == 0 (v009): rounded square with true corner radius R (default CORNER_R)."""
+        th = np.asarray(th, float)
+        h = np.asarray(S, float) / 2
         c, s = np.abs(np.cos(th)), np.abs(np.sin(th))
-        r1 = h / np.maximum(c, s); r2 = (S - a) / (c + s)
+        r1 = h / np.maximum(c, s)
+        if CH <= 0:
+            R = np.minimum(CR if R is None else R, h); hr = h - R
+            corner = (r1 * c > hr) & (r1 * s > hr)
+            b = hr * (c + s)
+            rc = b + np.sqrt(np.maximum(b * b - 2 * hr * hr + R * R, 0.0))
+            return np.where(corner, rc, r1)
+        a = CH * 2 * h; r2 = (2 * h - a) / (c + s)
+        k = np.asarray(k, float)
         m = np.minimum(r1, r2)
         return m - k * np.log(np.exp(-(r1 - m) / k) + np.exp(-(r2 - m) / k))
+
+    def R_at(inset):  # corner radius of a surface offset inward by `inset` (true offset of a rounded square)
+        return max(CR - inset, 0.5)
 
     # ---------------------------------------------------------------- generatrix: cone + neck fillet
     zf = np.array([p[0] for p in B.PROFILE if 160 <= p[0] <= 172.5]); rf = np.array([p[1] / 2 for p in B.PROFILE if 160 <= p[0] <= 172.5])
@@ -69,15 +84,15 @@ def install(B):
     # ---------------------------------------------------------------- crease height per ray (sharp intersection)
     SH = B.width_at(B.Z_HOLD)
     def crease(th, inset=0.0):
-        return 160.0 + ((R0 - inset * QC) - sq_np(th, SH - 2 * inset)) / M
+        return 160.0 + ((R0 - inset * QC) - sq_np(th, SH - 2 * inset, R=R_at(inset))) / M
 
     def k_ray(th, z, inset=0.0):
         """vertical-edge softness: EDGE_SOFT, ramping to EDGE_SOFT_CAP over CAP_RAMP mm under the crease."""
         x = np.clip((z - (crease(th, inset) - CAP_RAMP)) / CAP_RAMP, 0.0, 1.0)
         return EDGE_SOFT + (EDGE_SOFT_CAP - EDGE_SOFT) * x * x * (3 - 2 * x)
 
-    def section_np(th, S, t, k):
-        return (1 - t) * sq_np(th, S, k) + t * S / 2
+    def section_np(th, S, t, k, R=None):
+        return (1 - t) * sq_np(th, S, k, R) + t * S / 2
 
     # ---------------------------------------------------------------- exact rolling-ball intersection
     def ri_np(dA, dB, c, rho):
@@ -93,7 +108,8 @@ def install(B):
         th = np.asarray(th, float); z = np.broadcast_to(np.asarray(z, float), th.shape)
         S = np.broadcast_to(np.asarray(S, float), th.shape); t = np.broadcast_to(np.asarray(t, float), th.shape)
         k = k_ray(th, z, inset); e = 1e-5
-        P = section_np(th, S, t, k); dP = (section_np(th + e, S, t, k) - section_np(th - e, S, t, k)) / (2 * e)
+        Rc = R_at(inset)
+        P = section_np(th, S, t, k, Rc); dP = (section_np(th + e, S, t, k, Rc) - section_np(th - e, S, t, k, Rc)) / (2 * e)
         G, m = G_np(z); q = np.sqrt(1 + m * m)
         G = G - inset * q                          # cone offset along its normal: true wall
         cp = P / np.sqrt(P * P + dP * dP); c = cp / q
@@ -141,7 +157,7 @@ def install(B):
     TH = set(round(2 * math.pi * i / 384, 7) for i in range(384))
     for q4 in range(4):
         for va in (q4 * math.pi / 2 + tv, q4 * math.pi / 2 + math.pi / 2 - tv):
-            for j in range(-24, 25): TH.add(round((va + j * 0.0018) % (2 * math.pi), 7))
+            for j in range(-30, 31): TH.add(round((va + j * 0.0018) % (2 * math.pi), 7))
     THETAS = np.array(sorted(TH)); NT = len(THETAS)
     ZA_OUT = crease(THETAS); ZA0_OUT = float(crease(np.array([-math.pi / 2]))[0])
     ZA_IN = crease(THETAS, B.WALL); ZA0_IN = float(crease(np.array([-math.pi / 2]), B.WALL)[0])
@@ -205,7 +221,7 @@ def install(B):
         W0 = max(B.body_S(base_t) - 2 * B.WALL, B.BORE) - heel_dw(base_t, base_t); rows = []
         for i in range(1, 21):  # floor: flat when PUNT_H = 0
             kk = i / 20; z = base_t + B.PUNT_H * (1 - kk * kk)
-            rows.append((sq_np(THETAS, W0 * kk), np.full(NT, z)))
+            rows.append((sq_np(THETAS, W0 * kk, R=R_at(B.WALL)), np.full(NT, z)))
         for a in range(5, 91, 5):
             z = base_t + B.HEEL_R * (1 - math.cos(math.radians(a)))
             rows.append((inner_np(THETAS, z, base_t), np.full(NT, z)))
@@ -291,8 +307,46 @@ def install(B):
         r = outer_r(th, z) + off
         return (r * math.cos(th) * MM, r * math.sin(th) * MM, z * MM)
 
+    # ---------------------------------------------------------------- rev D.2 die (client: die follows the arch)
+    def onset_z(thetas, carve=0.05, z0=128.0, z1=160.0, dz=0.05):
+        """lowest z on each ray where the glass is carved more than `carve` below the prism: the arch onset."""
+        thetas = np.asarray(thetas, float); out = np.full(thetas.shape, np.nan)
+        for z in np.arange(z0, z1, dz):
+            P = section_np(thetas, B.body_S(z), np.full(thetas.shape, B.roundness(z)), k_ray(thetas, z))
+            hit = np.isnan(out) & ((P - outer_np(thetas, z)) > carve)
+            out[hit] = z
+            if not np.isnan(out).any(): break
+        return out
+
+    def z_to_v(z):  # inverse of the label height mapping in surf_xyz
+        zz = z + getattr(B, 'LABEL_DROP', 0.0)
+        return B.Z_EDGE - zz if zz <= B.Z_EDGE else -(zz - B.Z_EDGE) / SIN49
+
+    def revD2_trim(clearance=2.0, step=0.5):
+        """Replace the dieline's top chain (TRIM[0..42], x -119.4 -> 119.4) by min(approved edge, arch onset - clearance),
+        expressed in dieline coordinates, so the die follows the arch wherever the approved crown would cross it."""
+        top = B.TRIM[:43]; rest = B.TRIM[43:]
+        xs = np.arange(top[0][0], top[-1][0] + 1e-9, step)
+        y_old = np.interp(xs, [p[0] for p in top], [p[1] for p in top])
+        zref = B.Z_EDGE
+        ths = np.array([panel_theta(x, zref) for x in xs])
+        zon = onset_z(ths)
+        new = []
+        for x, yo, zo in zip(xs, y_old, zon):
+            yn = yo
+            if not np.isnan(zo):
+                v = z_to_v(zo - clearance)
+                yc = B.dev_xy(x, v)[1]
+                yn = max(yo, yc)          # dieline y grows downward: max = lower edge
+            new.append((float(x), float(yn)))
+        B.TRIM = new + list(rest)
+        i0 = int(np.argmin(np.abs(xs)))
+        return dict(clearance=clearance, onset_centre=float(zon[i0]), top_z_centre=float(zon[i0] - clearance),
+                    crown_from_cap=float(B.CAP_TOP - (zon[i0] - clearance)), lowered_points=int(sum(1 for (x, yn), yo in zip(new, y_old) if yn > yo + 1e-6)))
+
     # ---------------------------------------------------------------- install
     B.outer_r, B.build_glass, B.build_liquid, B.inner_volume, B.surf_xyz = outer_r, build_glass, build_liquid, inner_volume, surf_xyz
+    B.revD2_trim, B.onset_z = revD2_trim, onset_z
     B.GLASS_V007 = dict(g, outer_np=outer_np, inner_np=inner_np, G_np=G_np, crease=crease, sq_np=sq_np,
                         k_ray=k_ray, section_np=section_np, THETAS=THETAS, HEEL=HEEL, R0=R0, M=M, QC=QC,
                         ZTN=ZTN, ZCN=ZCN, vertex_angle=-math.pi / 2 + tv)

@@ -1,4 +1,4 @@
-# Avante Brandy — Blender master scene (v008)
+# Avante Brandy — Blender master scene (v009)
 
 Concept 1 rev D packaging on the 750 ml Imperial bottle, built procedurally from the
 Figma/Notion handoff (Figma file `JcxeRDhCrtgZUXhTWQn2hV`, pages 01–03).
@@ -152,3 +152,18 @@ builder (`GLASS_MODEL = 'v007'`; `'legacy'` keeps the v006 dome for comparison).
   narrower facets; the approved dieline's panel boundaries no longer coincide exactly with the glass corners.
 - Checks: arch corner targets moved to the reference values for a 4–5 mm leg; datum checks follow `LABEL_DROP`.
   All 26 pass. New camera `CAM_Corner` (front-right chamfer close-up).
+
+## v009 changes (3 Nov 2026) — rounded corners, rev D.2 die, label 6 mm lower
+
+`avante_master_v009.blend` is current; v001–v008 untouched. Client instructions and decision:
+- **Chamfer closed totally; vertical corners rounded** (`CHAMFER = 0`, `CORNER_R = 4.5` mm true radius; inner wall
+  radius 0.9 = 4.5 − 3.6). The corner sits further out, so the cone meets it lower: crease 143.75 corner / 156.6
+  centre, arch rise 12.9 mm (raw2, which has a chamfer, 11.7). Base re-solves to 21.7 mm for 750.0 ml.
+- **Rev D.2 die (Route 1): the top edge follows the arch.** `revD2_trim(clearance=2.0)` replaces the dieline's top chain
+  by min(approved edge, arch onset − 2 mm), so the label lies entirely on flat glass. Crown 86.05 mm from cap top;
+  clearance 2.0 mm (centre) / 1.98 (corner). Artwork untouched; the spear tip clears the die edge by ~8 mm.
+  `LABEL_MODE = 'approved'` restores the rev D die.
+- **Label moved a further 3 mm down** (`LABEL_DROP = 6.0`): bottom 171.87 mm from cap top. The label bottom is now
+  **0.67 mm** above the roundel film — reported as W2 (under 2 mm is tight for labelling tolerance).
+- Checks: 29 (11 + 18), all pass; W2 warning. Arch-corner targets are now the geometry of the rounded corner (the
+  references have a chamfer, so there is no reference value for them).

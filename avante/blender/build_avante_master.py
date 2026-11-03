@@ -44,8 +44,9 @@ FILL_ML = 750.0          # V
 CAP_TOP = 238.1          # P (glass + ≈11.2 mm bar-top)
 WALL = 3.6               # A side wall; thinner so the heavier heel still holds 750 ml
 BORE = 26.0              # P neck bore
-CHAMFER = 0.050          # v008 client: corner chamfer closed up (was 0.0754; refs read 0.045-0.055 W in studies A/D)
-LABEL_DROP = 3.0         # v008 client: wrap label moved 3 mm down (datums 79.64/165.9 -> 82.64/168.9 from cap top)
+CHAMFER = 0.0            # v009 client: chamfer closed totally (v008 0.050, v007 0.0754)
+CORNER_R = 4.5           # v009 client: vertical corners rounded instead, true radius (mm)
+LABEL_DROP = 6.0         # client: wrap label moved down 3 mm (v008) + a further 3 mm (v009); bottom 171.9 from cap top
 N_RING = 256
 EDGE_SOFT = 0.125        # v007: soft-min width k; vertical edge R = 7.91 k = 1.0 mm (v006 0.7 was R 5.5)
 GLASS_MODEL = 'v007'     # 'v007' = glass_v007.py (reference-true shoulder); 'legacy' = v006 dome below
@@ -154,6 +155,12 @@ def sq_radius(theta, S):
     c, s = abs(math.cos(theta)), abs(math.sin(theta))
     r1 = h / max(c, s)
     r2 = (S - a) / (c + s)
+    if CHAMFER <= 0:  # v009: rounded square, true corner radius CORNER_R
+        R = min(CORNER_R, h); hr = h - R
+        x, y = r1 * c, r1 * s
+        if x > hr and y > hr:
+            b = hr * (c + s); return b + math.sqrt(max(b * b - 2 * hr * hr + R * R, 0.0))
+        return r1
     # v007: stable soft-min (the raw exp(-r/k) form underflows below k ~0.078); R = 7.91 k on these edges
     return softmin(r1, r2, EDGE_SOFT)
 
@@ -971,6 +978,9 @@ if GLASS_MODEL == 'v007':  # replaces glass, liquid, outer_r, inner_volume and t
     except NameError: pass
     import glass_v007
     GLASS_V007_INFO = glass_v007.install(sys.modules[__name__])
+    # v009 client decision (Route 1): rev D.2 die, top edge follows the arch with 2 mm clearance
+    LABEL_MODE = 'revD2'   # 'approved' = rev D die as approved (crown crosses the arch onset)
+    REVD2_INFO = revD2_trim(clearance=2.0) if LABEL_MODE == 'revD2' else None
 
 def main():
     clear_scene()
