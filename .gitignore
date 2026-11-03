@@ -5,3 +5,8 @@ __pycache__/
 avante/blender/research/references/
 avante/blender/renders/v005_tests/
 avante/blender/renders/screenshots/
+# v007: study diagnostics stay local (raw dumps; some images crop third-party reference photos)
+avante/blender/research/v006_study/diag/*.png
+avante/blender/research/v006_study/diag/*.npy
+avante/blender/research/v006_study/diag/*.exr
+avante/blender/research/v006_study/diag/*.blend

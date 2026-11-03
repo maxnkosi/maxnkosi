@@ -1,0 +1,90 @@
+CRITIC_REPORT_BUILD {'tag': 'r4_plane', 'rho': '4', 'label': 'plane', 'cone_R0': 40.15952380952382, 'cone_M': 1.2868571428571451, 'cone_deg_from_horiz': 37.8503160558087, 'neck_tangent': (171.80266090631955, 187.9897984291636), 'ring_verts': 776, 'crease_out_centre_corner': (156.62707223209, 145.8569007453605), 'crease_in_centre_corner': (154.86541010357735, 144.9675786461835), 'glass_verts': 675898, 'glass_build_s': 2.5, 'liquid_verts': 205642, 'build_s': 24.4, 'base_thickness_mm': 16.71, 'inner_volume_to_fill_ml': 750.0, 'brimful_ml': 806.5, 'glass_height_mm': 226.9, 'overall_with_capsule_mm': 238.1, 'max_width_mm': 89.0}
+CHECK | Glass height | 226.9 | 226.9 | 0.05 | PASS
+CHECK | Glass max width X | 89.0 | 89.0 | 0.5 | PASS
+CHECK | Overall height | 238.1 | 238.1 | 0.05 | PASS
+CHECK | Capsule skirt from cap | 66.27 | 66.27 | 0.05 | PASS
+CHECK | Wrap crown from cap | 79.63 | 79.64 | 0.6 | PASS
+CHECK | Wrap bottom from cap | 165.87 | 165.9 | 3.5 | PASS
+CHECK | Collar top | 23.66 | 23.66 | 0.05 | PASS
+CHECK | Collar bottom | 37.64 | 37.64 | 0.05 | PASS
+CHECK | Roundel centre | 195.9 | 195.9 | 0.05 | PASS
+CHECK | Roundel film dia | 46.71 | 46.71 | 0.1 | PASS
+CHECK | Inner volume to fill (ml) | 750.0 | 750.0 | 15.0 | PASS
+CRITIC_LABEL {"strain": {"all_p99": 0.0388623752324803, "all_max": 0.13429707212305764, "crown_p99": 0.0015352683533526434, "crown_max_stretch": 0.0018839137460244793, "crown_max_compress": 0.0006251542810756794, "frac_over_1pct": 0.16048186653125585, "crown_frac_over_1pct": 0.0}, "label_gap": {"max": 3.4924714718201813, "p99": 0.8824530173303877, "frac_gt_0p1": 0.01929903571050122, "min": 0.004997464815438946}, "label_on_carved_glass_frac": 0.02051764331885133, "clearance_min": -4.81}
+CRITIC_RENDER glass34 17.3
+CRITIC_RENDER glasshero 15.8
+CRITIC_RENDER full34 18.6
+CRITIC_RENDER fullhero 27.4
+CRITIC_RENDER shoulder 22.1
+CRITIC_RENDER glassshoulder 16.2
+CRITIC_RENDER neck 12.2
+CRITIC_RENDER heel 15.9
+CRITIC_DONE 188.1
+CRITIC_REPORT_BUILD {'tag': 'r3_plane', 'rho': '3', 'label': 'plane', 'cone_R0': 40.15952380952382, 'cone_M': 1.2868571428571451, 'cone_deg_from_horiz': 37.8503160558087, 'neck_tangent': (171.80266090631955, 187.9897984291636), 'ring_verts': 776, 'crease_out_centre_corner': (156.62707223209, 145.8569007453605), 'crease_in_centre_corner': (154.86541010357735, 144.9675786461835), 'glass_verts': 675898, 'glass_build_s': 2.3, 'liquid_verts': 205642, 'build_s': 30.5, 'base_thickness_mm': 16.74, 'inner_volume_to_fill_ml': 750.0, 'brimful_ml': 806.5, 'glass_height_mm': 226.9, 'overall_with_capsule_mm': 238.1, 'max_width_mm': 89.0}
+CHECK | Glass height | 226.9 | 226.9 | 0.05 | PASS
+CHECK | Glass max width X | 89.0 | 89.0 | 0.5 | PASS
+CHECK | Overall height | 238.1 | 238.1 | 0.05 | PASS
+CHECK | Capsule skirt from cap | 66.27 | 66.27 | 0.05 | PASS
+CHECK | Wrap crown from cap | 79.63 | 79.64 | 0.6 | PASS
+CHECK | Wrap bottom from cap | 165.87 | 165.9 | 3.5 | PASS
+CHECK | Collar top | 23.66 | 23.66 | 0.05 | PASS
+CHECK | Collar bottom | 37.64 | 37.64 | 0.05 | PASS
+CHECK | Roundel centre | 195.9 | 195.9 | 0.05 | PASS
+CHECK | Roundel film dia | 46.71 | 46.71 | 0.1 | PASS
+CHECK | Inner volume to fill (ml) | 750.0 | 750.0 | 15.0 | PASS
+CRITIC_LABEL {"strain": {"all_p99": 0.0388623752324803, "all_max": 0.13429707212305764, "crown_p99": 0.0015352683533526434, "crown_max_stretch": 0.0018839137460244793, "crown_max_compress": 0.0006251542810756794, "frac_over_1pct": 0.16048186653125585, "crown_frac_over_1pct": 0.0}, "label_gap": {"max": 3.4924714718201813, "p99": 0.7253823348232712, "frac_gt_0p1": 0.01661015153120695, "min": 0.004997464815438946}, "label_on_carved_glass_frac": 0.018067182367277737, "clearance_min": -4.26}
+CRITIC_RENDER glassshoulder 19.0
+CRITIC_RENDER shoulder 20.5
+CRITIC_DONE 86.8
+CRITIC_REPORT_BUILD {'tag': 'v006base', 'rho': 'v006', 'label': 'plane', 'build_s': 24.7, 'base_thickness_mm': 17.79, 'inner_volume_to_fill_ml': 750.0, 'brimful_ml': 811.7, 'glass_height_mm': 226.9, 'overall_with_capsule_mm': 238.1, 'max_width_mm': 89.0}
+CHECK | Glass height | 226.9 | 226.9 | 0.05 | PASS
+CHECK | Glass max width X | 89.0 | 89.0 | 0.5 | PASS
+CHECK | Overall height | 238.1 | 238.1 | 0.05 | PASS
+CHECK | Capsule skirt from cap | 66.27 | 66.27 | 0.05 | PASS
+CHECK | Wrap crown from cap | 79.63 | 79.64 | 0.6 | PASS
+CHECK | Wrap bottom from cap | 165.87 | 165.9 | 3.5 | PASS
+CHECK | Collar top | 23.66 | 23.66 | 0.05 | PASS
+CHECK | Collar bottom | 37.64 | 37.64 | 0.05 | PASS
+CHECK | Roundel centre | 195.9 | 195.9 | 0.05 | PASS
+CHECK | Roundel film dia | 46.71 | 46.71 | 0.1 | PASS
+CHECK | Inner volume to fill (ml) | 750.0 | 750.0 | 15.0 | PASS
+CRITIC_RENDER glass34 11.9
+CRITIC_RENDER glasshero 13.0
+CRITIC_RENDER glassshoulder 14.2
+CRITIC_RENDER shoulder 16.1
+CRITIC_RENDER neck 13.8
+CRITIC_RENDER heel 16.7
+CRITIC_DONE 110.7
+CRITIC_REPORT_BUILD {'tag': 'r4_wrap', 'rho': '4', 'label': 'wrap', 'cone_R0': 40.15952380952382, 'cone_M': 1.2868571428571451, 'cone_deg_from_horiz': 37.8503160558087, 'neck_tangent': (171.80266090631955, 187.9897984291636), 'ring_verts': 776, 'crease_out_centre_corner': (156.62707223209, 145.8569007453605), 'crease_in_centre_corner': (154.86541010357735, 144.9675786461835), 'glass_verts': 675898, 'glass_build_s': 2.4, 'liquid_verts': 205642, 'build_s': 28.2, 'base_thickness_mm': 16.71, 'inner_volume_to_fill_ml': 750.0, 'brimful_ml': 806.5, 'glass_height_mm': 226.9, 'overall_with_capsule_mm': 238.1, 'max_width_mm': 89.0}
+CHECK | Glass height | 226.9 | 226.9 | 0.05 | PASS
+CHECK | Glass max width X | 89.0 | 89.0 | 0.5 | PASS
+CHECK | Overall height | 238.1 | 238.1 | 0.05 | PASS
+CHECK | Capsule skirt from cap | 66.27 | 66.27 | 0.05 | PASS
+CHECK | Wrap crown from cap | 78.6 | 79.64 | 0.6 | FAIL
+CHECK | Wrap bottom from cap | 165.87 | 165.9 | 3.5 | PASS
+CHECK | Collar top | 23.66 | 23.66 | 0.05 | PASS
+CHECK | Collar bottom | 37.64 | 37.64 | 0.05 | PASS
+CHECK | Roundel centre | 195.9 | 195.9 | 0.05 | PASS
+CHECK | Roundel film dia | 46.71 | 46.71 | 0.1 | PASS
+CHECK | Inner volume to fill (ml) | 750.0 | 750.0 | 15.0 | PASS
+CRITIC_LABEL {"strain": {"all_p99": 0.1379707532362566, "all_max": 0.7632125500790454, "crown_p99": 0.22131030377704697, "crown_max_stretch": 0.0671607837263204, "crown_max_compress": 0.23708079169443375, "frac_over_1pct": 0.18010524077814394, "crown_frac_over_1pct": 0.6973169368362213}, "label_gap": {"max": 0.00500999045399908, "p99": 0.005002018295809876, "frac_gt_0p1": 0.0, "min": 0.004989766043863142}, "label_on_carved_glass_frac": 0.026000026342478565, "clearance_min": -4.81}
+CRITIC_RENDER shoulder 18.7
+CRITIC_DONE 57.8
+CRITIC_REPORT_BUILD {'tag': 'r4_high', 'rho': '4', 'label': 'plane', 'cone_R0': 47.38, 'cone_M': 1.6, 'cone_deg_from_horiz': 32.005383208083494, 'neck_tangent': (173.66873807503578, 188.93270754712736), 'ring_verts': 776, 'crease_out_centre_corner': (161.8, 153.1377049328161), 'crease_in_centre_corner': (159.80470849057454, 151.8440240469849), 'glass_verts': 673570, 'glass_build_s': 2.5, 'liquid_verts': 215730, 'build_s': 24.7, 'base_thickness_mm': 19.73, 'inner_volume_to_fill_ml': 750.0, 'brimful_ml': 816.2, 'glass_height_mm': 226.9, 'overall_with_capsule_mm': 238.1, 'max_width_mm': 89.0}
+CHECK | Glass height | 226.9 | 226.9 | 0.05 | PASS
+CHECK | Glass max width X | 89.0 | 89.0 | 0.5 | PASS
+CHECK | Overall height | 238.1 | 238.1 | 0.05 | PASS
+CHECK | Capsule skirt from cap | 66.27 | 66.27 | 0.05 | PASS
+CHECK | Wrap crown from cap | 79.63 | 79.64 | 0.6 | PASS
+CHECK | Wrap bottom from cap | 165.87 | 165.9 | 3.5 | PASS
+CHECK | Collar top | 23.66 | 23.66 | 0.05 | PASS
+CHECK | Collar bottom | 37.64 | 37.64 | 0.05 | PASS
+CHECK | Roundel centre | 195.9 | 195.9 | 0.05 | PASS
+CHECK | Roundel film dia | 46.71 | 46.71 | 0.1 | PASS
+CHECK | Inner volume to fill (ml) | 750.0 | 750.0 | 15.0 | PASS
+CRITIC_LABEL {"strain": {"all_p99": 0.0388623752324803, "all_max": 0.13429707212305764, "crown_p99": 0.0015352683533526434, "crown_max_stretch": 0.0018839137460244793, "crown_max_compress": 0.0006251542810756794, "frac_over_1pct": 0.16048186653125585, "crown_frac_over_1pct": 0.0}, "label_gap": {"max": 0.006506389834285642, "p99": 0.006469121868860839, "frac_gt_0p1": 0.0, "min": 0.004997464815438946}, "label_on_carved_glass_frac": 0.0, "clearance_min": 1.78}
+CRITIC_RENDER glass34 14.0
+CRITIC_RENDER full34 23.2
+CRITIC_RENDER shoulder 21.6
+CRITIC_DONE 100.1
+ALLDONE

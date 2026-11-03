@@ -1,0 +1,66 @@
+== 1. softmin k -> equivalent fillet radius, generic 2D corner of turn angle T between two straight lines
+  -- vertical face/chamfer edge (vertex at 40.34 deg, bisector 22.5 deg -> ray 17.8 deg off bisector)
+   k=1.20  Rmin 6.56  R_turnspread 11.29  R_gap 9.48   (ratios to k: 5.5 9.4 7.9)
+   k=0.80  Rmin 4.37  R_turnspread 7.54  R_gap 6.33   (ratios to k: 5.5 9.4 7.9)
+   k=0.70  Rmin 3.82  R_turnspread 6.60  R_gap 5.54   (ratios to k: 5.5 9.4 7.9)
+   k=0.60  Rmin 3.27  R_turnspread 5.66  R_gap 4.75   (ratios to k: 5.5 9.4 7.9)
+   k=0.30  Rmin 1.63  R_turnspread 2.83  R_gap 2.37   (ratios to k: 5.4 9.4 7.9)
+   k=0.25  Rmin 1.36  R_turnspread 2.36  R_gap 1.98   (ratios to k: 5.4 9.4 7.9)
+   k=0.18  Rmin 0.98  R_turnspread 1.70  R_gap 1.42   (ratios to k: 5.4 9.4 7.9)
+   k=0.12  Rmin 0.65  R_turnspread 1.13  R_gap 0.95   (ratios to k: 5.4 9.5 7.9)
+   k=0.10  Rmin 0.54  R_turnspread 0.95  R_gap 0.79   (ratios to k: 5.4 9.5 7.9)
+   k=0.07  Rmin 0.38  R_turnspread 0.66  R_gap 0.55   (ratios to k: 5.4 9.5 7.9)
+   k=0.05  Rmin 0.27  R_turnspread 0.47  R_gap 0.40   (ratios to k: 5.4 9.5 7.9)
+  -- 45 deg turn, ray on bisector
+   k=1.20  Rmin 7.10  R_turnspread 12.01  R_gap 10.10   (ratios to k: 5.9 10.0 8.4)
+   k=0.80  Rmin 4.71  R_turnspread 8.02  R_gap 6.73   (ratios to k: 5.9 10.0 8.4)
+   k=0.70  Rmin 4.11  R_turnspread 7.02  R_gap 5.89   (ratios to k: 5.9 10.0 8.4)
+   k=0.60  Rmin 3.52  R_turnspread 6.02  R_gap 5.05   (ratios to k: 5.9 10.0 8.4)
+   k=0.30  Rmin 1.75  R_turnspread 3.01  R_gap 2.52   (ratios to k: 5.8 10.0 8.4)
+   k=0.25  Rmin 1.46  R_turnspread 2.51  R_gap 2.10   (ratios to k: 5.8 10.0 8.4)
+   k=0.18  Rmin 1.05  R_turnspread 1.81  R_gap 1.51   (ratios to k: 5.8 10.0 8.4)
+   k=0.12  Rmin 0.70  R_turnspread 1.20  R_gap 1.01   (ratios to k: 5.8 10.0 8.4)
+   k=0.10  Rmin 0.58  R_turnspread 1.00  R_gap 0.84   (ratios to k: 5.8 10.0 8.4)
+   k=0.07  Rmin 0.41  R_turnspread 0.70  R_gap 0.59   (ratios to k: 5.8 10.0 8.4)
+   k=0.05  Rmin 0.29  R_turnspread 0.50  R_gap 0.42   (ratios to k: 5.8 10.0 8.4)
+  -- panel centre arch: vertical face vs 37 deg cone, horizontal ray (26.4 deg off bisector)
+   k=1.20  Rmin 4.02  R_turnspread 7.29  R_gap 6.09   (ratios to k: 3.4 6.1 5.1)
+   k=0.80  Rmin 2.68  R_turnspread 4.87  R_gap 4.06   (ratios to k: 3.4 6.1 5.1)
+   k=0.70  Rmin 2.35  R_turnspread 4.27  R_gap 3.56   (ratios to k: 3.4 6.1 5.1)
+   k=0.60  Rmin 2.01  R_turnspread 3.66  R_gap 3.05   (ratios to k: 3.4 6.1 5.1)
+   k=0.30  Rmin 1.01  R_turnspread 1.83  R_gap 1.53   (ratios to k: 3.4 6.1 5.1)
+   k=0.25  Rmin 0.84  R_turnspread 1.53  R_gap 1.27   (ratios to k: 3.4 6.1 5.1)
+   k=0.18  Rmin 0.60  R_turnspread 1.10  R_gap 0.92   (ratios to k: 3.4 6.1 5.1)
+   k=0.12  Rmin 0.40  R_turnspread 0.73  R_gap 0.61   (ratios to k: 3.4 6.1 5.1)
+   k=0.10  Rmin 0.34  R_turnspread 0.61  R_gap 0.51   (ratios to k: 3.4 6.1 5.1)
+   k=0.07  Rmin 0.24  R_turnspread 0.43  R_gap 0.36   (ratios to k: 3.4 6.1 5.1)
+   k=0.05  Rmin 0.17  R_turnspread 0.31  R_gap 0.25   (ratios to k: 3.4 6.1 5.1)
+== 2. v006 arch: carving onset (outer_r < section_r - tol) by theta
+   face/chamfer vertex theta = 40.34 deg; chamfer leg at S(152.5)=88.90: 6.70 mm
+   theta  0.00 (y=0.0): onset tol0.05 151.40  tol0.2 153.22  tol0.5 154.56
+   theta 10.00 (y=7.8): onset tol0.05 150.70  tol0.2 152.50  tol0.5 153.82
+   theta 20.00 (y=16.2): onset tol0.05 148.54  tol0.2 150.26  tol0.5 151.54
+   theta 30.00 (y=25.7): onset tol0.05 144.52  tol0.2 146.28  tol0.5 147.52
+   theta 35.00 (y=31.1): onset tol0.05 141.80  tol0.2 143.38  tol0.5 144.58
+   theta 40.34 (y=37.4): onset tol0.05 137.90  tol0.2 140.02  tol0.5 141.30
+   theta 45.00 (y=41.1): onset tol0.05 137.50  tol0.2 139.68  tol0.5 141.02
+== 3. v006 shoulder R(z) slope near the corner (deg from vertical)
+   z 132.0 shoulder_R 62.89 dR/dz -0.111 -> 6.3 deg from vertical
+   z 136.0 shoulder_R 61.65 dR/dz -0.491 -> 26.2 deg from vertical
+   z 140.0 shoulder_R 59.09 dR/dz -0.769 -> 37.5 deg from vertical
+   z 144.0 shoulder_R 55.64 dR/dz -0.943 -> 43.3 deg from vertical
+   z 148.0 shoulder_R 51.69 dR/dz -1.014 -> 45.4 deg from vertical
+   z 152.0 shoulder_R 47.66 dR/dz -0.983 -> 44.5 deg from vertical
+   z 156.0 shoulder_R 43.97 dR/dz -0.848 -> 40.3 deg from vertical
+   z 157.4 shoulder_R 42.83 dR/dz -0.777 -> 37.8 deg from vertical
+   z 157.6 shoulder_R 42.67 dR/dz -0.783 -> 38.1 deg from vertical
+   z 160.0 shoulder_R 40.15 dR/dz -1.143 -> 48.8 deg from vertical
+   z 165.0 shoulder_R 33.80 dR/dz -1.319 -> 52.8 deg from vertical
+== 4. PROFILE derived numbers
+   W(140.0)=87.70
+   W(145.0)=89.00
+   W(150.0)=89.00
+   W(152.5)=88.90
+   W(155.0)=88.40
+   W(157.5)=85.50
+   W(160.0)=80.30

@@ -1,0 +1,6 @@
+v006 theta0 knuckle vertex z 156.7 r 44.76 turn 54.7 gap 1.57 -> R 12.5
+v006 theta0 neck vertex z 177.6 r 17.05 turn 53.0 gap 2.32 -> R 19.7
+   cone angle 53.0 deg from vertical
+v005 (PROFILE/2) knuckle vertex z 156.7 r 44.78 turn 54.8 gap 1.19 -> R 9.4
+v005 (PROFILE/2) neck vertex z 177.6 r 17.05 turn 53.0 gap 2.32 -> R 19.7
+   cone angle 53.0 deg from vertical

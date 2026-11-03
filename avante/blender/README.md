@@ -1,4 +1,4 @@
-# Avante Brandy — Blender master scene (v005)
+# Avante Brandy — Blender master scene (v007)
 
 Concept 1 rev D packaging on the 750 ml Imperial bottle, built procedurally from the
 Figma/Notion handoff (Figma file `JcxeRDhCrtgZUXhTWQn2hV`, pages 01–03).
@@ -95,3 +95,47 @@ bird/spear graphic toned down to dL* 7 above the navy (#286789 to #0E4765, rende
 - Cameras: `CAM_Angle_Avante` (135 mm, 25° roll), `CAM_Angle_Roundel` (135 mm, −20°), `CAM_Angle_CollarFlag`
   (100 mm, 15°). Each camera carries `foil_aim_z`.
 - Not done: macro artwork re-export at about 50 px/mm (still 20 px/mm), AgX contrast look (kept "None").
+
+## v006 changes (3 Nov 2026) — arched shoulder
+
+`avante_master_v006.blend` is current; v001–v005 are untouched. From the client bottle references
+(Figma `56:35`, kept local only): the real bottle's shoulder is a revolved dome cutting the square
+body, so each flat face ends in an **arch** (high at the panel centre, carved down at the corners).
+v001–v005 shrank the square section with height, giving a pyramid with a straight horizontal crease.
+
+- Section = soft-min of the body square (held at 88.9 mm above 152.5 mm) and a dome radius `shoulder_R(z)`
+  (`dome_cut`, 1.2 mm fillet). The dome follows the measured front silhouette above 157.5 mm and eases out
+  (monotone Hermite) to clear the corners: corners start carving at about 140 mm, panel centre at about
+  151 mm, a ~12 mm arch, close to the rev D wrap crown's ~16 mm drop. Arch heights are read from the photos
+  and the crown (A), not measured.
+- Applied to the outer glass, inner wall (inset 3.6 mm), liquid, wrap surface and capsule. Neck finish
+  rounding now only above 182 mm.
+- Base re-solved 20.6 → 17.8 mm to hold 750.0 ml. 11/11 checks pass.
+- Renders: `v006_hero`, `v006_threequarter`, `v006_foil_macro`, `v006_angle_avante`,
+  `v006_glass_only_threequarter`; other v005 shots unaffected by the shoulder and not re-rendered.
+
+## v007 changes (3 Nov 2026) — reference-true Imperial glass
+
+`avante_master_v007.blend` is current; v001–v006 are untouched. v006's shoulder was rejected by the client
+(uneven surface, low shoulders, label placement, over-bevelled edges). Multi-agent study, critics and judge's
+ruling: `research/v006_study/` (`G_judge_ruling.md`). Glass now lives in `glass_v007.py`, installed by the
+builder (`GLASS_MODEL = 'v007'`; `'legacy'` keeps the v006 dome for comparison).
+
+- Shoulder: straight cone R = 40.16 − 1.287 (z − 160) (52° from vertical, fitted to PROFILE 160–172.5) cut by the
+  chamfered square, exact rolling-ball fillet ρ 7 (inner 8); neck fillet 20.5. Arch crease 156.6 centre / 145.9
+  corner (rise 10.7), visible onset 154.05 / 143.15. Square held above 147.5 (no break). PROFILE 140 → 88.1 (raw2).
+- ρ: the ruling chose 4 on a reported 0.58 mm silhouette deviation; re-measured, ρ 4 deviates 1.25 mm at the
+  knuckle and only ρ 7 meets the 0.7 mm tolerance (0.58), matching raw2's soft centre knuckle.
+- Vertical edges R ≈ 1.0 (soft-min k 0.125, stable form), ramping to k 0.7 over 10 mm under the crease so each
+  chamfer cap blends without a dimple. Chamfer width unchanged (0.0754).
+- Heel: flat 32° bevel from z 8.5, footprint half-width 30.6, R 1 breaks. Flat inner floor (PUNT_H 0), inner heel R 5,
+  wall offset along the normal (true 3.6 mm on the cone), bore blended over 181–189. Base re-solves to 20.0 mm for
+  750.0 ml (raw2 suggests ≈17.4 — unresolved, no supplier drawing).
+- Mesh: 776 angles per ring clustered at the edge vertices, rows following the arch (0.15 mm in the band), plain
+  smooth shading. Glass ≈ 680k vertices (≈ 4× v006).
+- Label kept exactly as approved (rev D die, datums 79.63 / 165.87, artwork). Perimeter by arc length on the filleted
+  section; the label sits on the glass and its top crosses the arch onset by 4.4 mm (front centre) to 5.6 mm (fold).
+  Reported as WARN W1 — **client decision pending**: rev D.2 die following the arch (crown ≈ 84.7 from cap) /
+  keep and trial on real bottles / custom mould with a higher shoulder.
+- Checks: 26 (11 original + 15 v007 shoulder checks) — ALL PASS; W1 warnings as above.
+- New cameras: `CAM_Shoulder`, `CAM_Shoulder_34` (135 mm, level with the shoulder at z 155).

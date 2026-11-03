@@ -1,0 +1,119 @@
+PARAMS CHAMFER 0.0754 EDGE_SOFT 0.7 ARCH_K 1.2 N_RING 256
+=== section z=40.0  S=75.60  chamfer leg=5.70  facet width=8.06 mm
+--- z=40.0 section, theta -5..55 deg (face->chamfer->face)
+   at s=  35.45 mm  Rmin=  3.82 mm  zone= 4.86 mm  turn= 41.0 deg  equiv_R(zone/turn)=  6.78 mm
+   at s=  39.18 mm  Rmin=  0.28 mm  zone= 0.00 mm  turn=  0.4 deg  equiv_R(zone/turn)=  0.19 mm
+   at s=  42.90 mm  Rmin=  3.82 mm  zone= 4.86 mm  turn= 41.0 deg  equiv_R(zone/turn)=  6.78 mm
+   vertex pull-in (sharp - soft) at face/chamfer vertex = 0.485 mm
+   N_RING=256: segment ~0.93-1.22 mm; verts per round zone ~3.99
+   N_RING=1024: segment ~0.304 mm, verts per zone ~16.0
+   N_RING=2048: segment ~0.152 mm, verts per zone ~31.9
+=== section z=100.0  S=83.00  chamfer leg=6.26  facet width=8.85 mm
+--- z=100.0 section, theta -5..55 deg (face->chamfer->face)
+   at s=  38.92 mm  Rmin=  3.82 mm  zone= 4.85 mm  turn= 41.0 deg  equiv_R(zone/turn)=  6.78 mm
+   at s=  43.04 mm  Rmin=  0.55 mm  zone= 0.00 mm  turn=  0.2 deg  equiv_R(zone/turn)=  0.37 mm
+   at s=  47.16 mm  Rmin=  3.82 mm  zone= 4.85 mm  turn= 41.0 deg  equiv_R(zone/turn)=  6.78 mm
+   vertex pull-in (sharp - soft) at face/chamfer vertex = 0.485 mm
+   N_RING=256: segment ~1.02-1.34 mm; verts per round zone ~3.63
+   N_RING=1024: segment ~0.334 mm, verts per zone ~14.5
+   N_RING=2048: segment ~0.167 mm, verts per zone ~29.1
+=== section z=140.0  S=87.70  chamfer leg=6.61  facet width=9.35 mm
+--- z=140.0 section, theta -5..55 deg (face->chamfer->face)
+   at s=  41.12 mm  Rmin=  3.82 mm  zone= 4.85 mm  turn= 41.0 deg  equiv_R(zone/turn)=  6.78 mm
+   at s=  45.49 mm  Rmin=  0.83 mm  zone= 0.00 mm  turn=  0.2 deg  equiv_R(zone/turn)=  0.55 mm
+   at s=  49.87 mm  Rmin=  3.82 mm  zone= 4.85 mm  turn= 41.0 deg  equiv_R(zone/turn)=  6.78 mm
+   vertex pull-in (sharp - soft) at face/chamfer vertex = 0.485 mm
+   N_RING=256: segment ~1.08-1.41 mm; verts per round zone ~3.44
+   N_RING=1024: segment ~0.353 mm, verts per zone ~13.8
+   N_RING=2048: segment ~0.176 mm, verts per zone ~27.5
+=== shoulder dome, vertical profiles (outer_r), z 120..192
+face centre: dome crosses face at z=155.44, dome slope dR/dz=-0.873 -> crease angle 41.1 deg
+   softmin ARCH_K=1.2: 95% blend band ~ +-4.1 mm in z; pull-in at crossing 0.83 mm
+--- face centre (theta=0.0) r(z) profile
+   at s=  20.06 mm  Rmin= 12.72 mm  zone= 1.37 mm  turn=  4.1 deg  equiv_R(zone/turn)= 19.29 mm
+   at s=  25.08 mm  Rmin=  8.49 mm  zone= 2.33 mm  turn=  9.5 deg  equiv_R(zone/turn)= 14.06 mm
+   at s=  32.60 mm  Rmin=  0.34 mm  zone= 7.71 mm  turn= 30.8 deg  equiv_R(zone/turn)= 14.33 mm
+   at s=  37.99 mm  Rmin=  0.84 mm  zone= 2.56 mm  turn= 15.9 deg  equiv_R(zone/turn)=  9.26 mm
+   at s=  41.46 mm  Rmin= 16.11 mm  zone= 1.38 mm  turn=  3.3 deg  equiv_R(zone/turn)= 23.64 mm
+   at s=  57.85 mm  Rmin= 28.64 mm  zone= 0.69 mm  turn=  1.2 deg  equiv_R(zone/turn)= 32.82 mm
+   at s=  65.18 mm  Rmin= 12.20 mm  zone= 4.71 mm  turn= 12.0 deg  equiv_R(zone/turn)= 22.54 mm
+   at s=  68.32 mm  Rmin= 12.59 mm  zone= 0.50 mm  turn=  1.5 deg  equiv_R(zone/turn)= 19.07 mm
+   at s=  71.23 mm  Rmin=  2.67 mm  zone= 3.52 mm  turn= 25.4 deg  equiv_R(zone/turn)=  7.92 mm
+   at s=  73.78 mm  Rmin= 23.97 mm  zone= 0.23 mm  turn=  0.5 deg  equiv_R(zone/turn)= 28.53 mm
+   at s=  79.33 mm  Rmin= 19.43 mm  zone= 1.34 mm  turn=  2.9 deg  equiv_R(zone/turn)= 25.99 mm
+   at s=  81.33 mm  Rmin= 12.29 mm  zone= 1.18 mm  turn=  3.6 deg  equiv_R(zone/turn)= 18.64 mm
+face 2/3 out: dome crosses face at z=153.71, dome slope dR/dz=-0.938 -> crease angle 43.2 deg
+   softmin ARCH_K=1.2: 95% blend band ~ +-3.8 mm in z; pull-in at crossing 0.83 mm
+--- face 2/3 out (theta=15.0) r(z) profile
+   at s=  20.06 mm  Rmin= 12.30 mm  zone= 1.39 mm  turn=  4.2 deg  equiv_R(zone/turn)= 18.81 mm
+   at s=  25.09 mm  Rmin=  8.17 mm  zone= 2.36 mm  turn=  9.9 deg  equiv_R(zone/turn)= 13.64 mm
+   at s=  32.64 mm  Rmin=  0.48 mm  zone= 6.91 mm  turn= 33.7 deg  equiv_R(zone/turn)= 11.75 mm
+   at s=  38.48 mm  Rmin=  0.81 mm  zone= 2.39 mm  turn= 12.5 deg  equiv_R(zone/turn)= 10.96 mm
+   at s=  42.06 mm  Rmin= 18.12 mm  zone= 1.25 mm  turn=  2.8 deg  equiv_R(zone/turn)= 25.40 mm
+   at s=  58.47 mm  Rmin= 28.64 mm  zone= 0.69 mm  turn=  1.2 deg  equiv_R(zone/turn)= 32.82 mm
+   at s=  65.80 mm  Rmin= 12.20 mm  zone= 4.71 mm  turn= 12.0 deg  equiv_R(zone/turn)= 22.54 mm
+   at s=  68.94 mm  Rmin= 12.59 mm  zone= 0.50 mm  turn=  1.5 deg  equiv_R(zone/turn)= 19.07 mm
+   at s=  71.84 mm  Rmin=  2.67 mm  zone= 3.52 mm  turn= 25.4 deg  equiv_R(zone/turn)=  7.92 mm
+   at s=  74.39 mm  Rmin= 23.97 mm  zone= 0.23 mm  turn=  0.5 deg  equiv_R(zone/turn)= 28.53 mm
+   at s=  79.95 mm  Rmin= 19.43 mm  zone= 1.34 mm  turn=  2.9 deg  equiv_R(zone/turn)= 25.99 mm
+   at s=  81.95 mm  Rmin= 12.29 mm  zone= 1.18 mm  turn=  3.6 deg  equiv_R(zone/turn)= 18.64 mm
+face/chamfer edge: dome crosses face at z=142.02, dome slope dR/dz=-0.869 -> crease angle 41.0 deg
+   softmin ARCH_K=1.2: 95% blend band ~ +-4.1 mm in z; pull-in at crossing 0.83 mm
+--- face/chamfer edge (theta=40.3) r(z) profile
+   at s=  11.03 mm  Rmin=  1.50 mm  zone= 0.00 mm  turn=  0.4 deg  equiv_R(zone/turn)=  0.00 mm
+   at s=  20.05 mm  Rmin= 11.21 mm  zone= 1.62 mm  turn=  4.8 deg  equiv_R(zone/turn)= 19.16 mm
+   at s=  22.04 mm  Rmin=  4.22 mm  zone= 5.79 mm  turn= 41.8 deg  equiv_R(zone/turn)=  7.93 mm
+   at s=  42.96 mm  Rmin=  0.80 mm  zone= 2.97 mm  turn=  9.9 deg  equiv_R(zone/turn)= 17.18 mm
+   at s=  46.59 mm  Rmin= 19.01 mm  zone= 1.19 mm  turn=  2.6 deg  equiv_R(zone/turn)= 26.10 mm
+   at s=  63.00 mm  Rmin= 28.64 mm  zone= 0.69 mm  turn=  1.2 deg  equiv_R(zone/turn)= 32.82 mm
+   at s=  70.33 mm  Rmin= 12.20 mm  zone= 4.71 mm  turn= 12.0 deg  equiv_R(zone/turn)= 22.54 mm
+   at s=  73.47 mm  Rmin= 12.59 mm  zone= 0.50 mm  turn=  1.5 deg  equiv_R(zone/turn)= 19.07 mm
+   at s=  76.38 mm  Rmin=  2.67 mm  zone= 3.52 mm  turn= 25.4 deg  equiv_R(zone/turn)=  7.92 mm
+   at s=  78.93 mm  Rmin= 23.97 mm  zone= 0.23 mm  turn=  0.5 deg  equiv_R(zone/turn)= 28.53 mm
+   at s=  84.48 mm  Rmin= 19.43 mm  zone= 1.34 mm  turn=  2.9 deg  equiv_R(zone/turn)= 25.99 mm
+   at s=  86.48 mm  Rmin= 12.29 mm  zone= 1.18 mm  turn=  3.6 deg  equiv_R(zone/turn)= 18.64 mm
+chamfer centre: dome crosses face at z=141.76, dome slope dR/dz=-0.858 -> crease angle 40.6 deg
+   softmin ARCH_K=1.2: 95% blend band ~ +-4.2 mm in z; pull-in at crossing 0.83 mm
+--- chamfer centre (theta=45.0) r(z) profile
+   at s=  11.03 mm  Rmin=  1.18 mm  zone= 0.00 mm  turn=  0.5 deg  equiv_R(zone/turn)=  0.00 mm
+   at s=  21.86 mm  Rmin=  4.41 mm  zone= 7.67 mm  turn= 46.6 deg  equiv_R(zone/turn)=  9.42 mm
+   at s=  43.05 mm  Rmin=  0.80 mm  zone= 2.97 mm  turn=  9.9 deg  equiv_R(zone/turn)= 17.18 mm
+   at s=  46.68 mm  Rmin= 19.01 mm  zone= 1.19 mm  turn=  2.6 deg  equiv_R(zone/turn)= 26.10 mm
+   at s=  63.09 mm  Rmin= 28.64 mm  zone= 0.69 mm  turn=  1.2 deg  equiv_R(zone/turn)= 32.82 mm
+   at s=  70.42 mm  Rmin= 12.20 mm  zone= 4.71 mm  turn= 12.0 deg  equiv_R(zone/turn)= 22.54 mm
+   at s=  73.56 mm  Rmin= 12.59 mm  zone= 0.50 mm  turn=  1.5 deg  equiv_R(zone/turn)= 19.07 mm
+   at s=  76.46 mm  Rmin=  2.67 mm  zone= 3.52 mm  turn= 25.4 deg  equiv_R(zone/turn)=  7.92 mm
+   at s=  79.02 mm  Rmin= 23.97 mm  zone= 0.23 mm  turn=  0.5 deg  equiv_R(zone/turn)= 28.53 mm
+   at s=  84.57 mm  Rmin= 19.43 mm  zone= 1.34 mm  turn=  2.9 deg  equiv_R(zone/turn)= 25.99 mm
+   at s=  86.57 mm  Rmin= 12.29 mm  zone= 1.18 mm  turn=  3.6 deg  equiv_R(zone/turn)= 18.64 mm
+=== PROFILE half-width slopes, base 0..20 mm
+      0-   1: d(half-width)/dz = 2.200
+      1-   2: d(half-width)/dz = 1.100
+      2- 3.5: d(half-width)/dz = 0.533
+    3.5-   5: d(half-width)/dz = 0.367
+      5- 7.5: d(half-width)/dz = 0.720
+    7.5-  10: d(half-width)/dz = 0.620
+     10-  20: d(half-width)/dz = 0.070
+--- base heel half-width profile 0..25 (in the face plane)
+   at s=   0.02 mm  Rmin=  9.91 mm  zone= 0.65 mm  turn=  2.1 deg  equiv_R(zone/turn)= 18.11 mm
+   at s=   2.41 mm  Rmin=  1.97 mm  zone= 4.45 mm  turn= 44.1 deg  equiv_R(zone/turn)=  5.78 mm
+   at s=   5.62 mm  Rmin=  4.04 mm  zone= 0.69 mm  turn=  5.6 deg  equiv_R(zone/turn)=  7.08 mm
+   at s=   7.22 mm  Rmin=  3.11 mm  zone= 2.51 mm  turn= 20.9 deg  equiv_R(zone/turn)=  6.88 mm
+   at s=  10.29 mm  Rmin=  6.17 mm  zone= 1.06 mm  turn=  5.1 deg  equiv_R(zone/turn)= 12.04 mm
+   at s=  10.31 mm  Rmin=  5.80 mm  zone= 0.81 mm  turn=  4.1 deg  equiv_R(zone/turn)= 11.18 mm
+   at s=  13.26 mm  Rmin=  1.45 mm  zone= 5.09 mm  turn= 33.6 deg  equiv_R(zone/turn)=  8.68 mm
+--- shoulder-to-neck (lathe) 170..195
+   at s=   7.32 mm  Rmin= 12.17 mm  zone= 4.72 mm  turn= 12.0 deg  equiv_R(zone/turn)= 22.56 mm
+   at s=  10.45 mm  Rmin= 12.50 mm  zone= 0.50 mm  turn=  1.5 deg  equiv_R(zone/turn)= 19.14 mm
+   at s=  13.36 mm  Rmin=  2.66 mm  zone= 3.52 mm  turn= 25.4 deg  equiv_R(zone/turn)=  7.93 mm
+   at s=  15.91 mm  Rmin= 23.82 mm  zone= 0.24 mm  turn=  0.5 deg  equiv_R(zone/turn)= 29.01 mm
+   at s=  21.47 mm  Rmin= 19.40 mm  zone= 1.34 mm  turn=  3.0 deg  equiv_R(zone/turn)= 26.06 mm
+   at s=  23.47 mm  Rmin= 12.27 mm  zone= 1.18 mm  turn=  3.6 deg  equiv_R(zone/turn)= 18.66 mm
+--- neck finish 212..226.9
+   at s=   3.01 mm  Rmin=  0.54 mm  zone= 1.33 mm  turn= 47.2 deg  equiv_R(zone/turn)=  1.61 mm
+   at s=   4.97 mm  Rmin=  1.38 mm  zone= 1.24 mm  turn= 11.5 deg  equiv_R(zone/turn)=  6.19 mm
+   at s=   7.48 mm  Rmin=  0.47 mm  zone= 4.59 mm  turn= 63.3 deg  equiv_R(zone/turn)=  4.15 mm
+   at s=  15.74 mm  Rmin=  1.79 mm  zone= 5.45 mm  turn= 64.9 deg  equiv_R(zone/turn)=  4.81 mm
+   at s=  18.74 mm  Rmin= 10.29 mm  zone= 0.18 mm  turn=  0.8 deg  equiv_R(zone/turn)= 12.80 mm
+base: z rows [0, 0.5, 1, 1.5, 2, 2.5, 3.0, 3.5, 4.0, 4.5, 5, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10, 10.5, 11.0, 11.5, 12]
+dome region rows 128..150 step: [128, 129.0, 130.0, 131.0, 132.0, 133.0, 134.0, 135.0] ...

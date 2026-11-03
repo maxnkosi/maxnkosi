@@ -1,0 +1,8 @@
+  k=1.20: face Rmin= 0.04 zone= 1.98 turn=14.5 equivR= 7.81 | corner Rmin= 4.31 zone= 5.37 turn=40.3 equivR= 7.64
+  k=0.80: face Rmin= 0.04 zone= 2.04 turn=13.2 equivR= 8.87 | corner Rmin= 4.18 zone= 6.03 turn=43.3 equivR= 7.99
+  k=0.50: face Rmin= 0.04 zone= 2.08 turn=11.5 equivR=10.35 | corner Rmin= 3.66 zone= 5.02 turn=40.3 equivR= 7.14
+  k=0.35: face Rmin= 0.04 zone= 2.08 turn=10.9 equivR=10.96 | corner Rmin= 3.06 zone= 4.31 turn=38.2 equivR= 6.45
+  k=0.25: face Rmin= 0.04 zone= 2.08 turn=10.7 equivR=11.15 | corner Rmin= 2.51 zone= 3.67 turn=36.5 equivR= 5.76
+  k=0.20: face Rmin= 0.04 zone= 2.08 turn=10.6 equivR=11.17 | corner Rmin= 2.18 zone= 3.27 turn=35.5 equivR= 5.29
+  k=0.15: face Rmin= 0.04 zone= 2.08 turn=10.6 equivR=11.18 | corner Rmin= 1.78 zone= 2.85 turn=34.3 equivR= 4.75
+  k=0.10: face Rmin= 0.04 zone= 2.08 turn=10.6 equivR=11.18 | corner Rmin= 1.30 zone= 2.45 turn=33.2 equivR= 4.22

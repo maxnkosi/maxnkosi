@@ -1,0 +1,101 @@
+{
+ "tag": "v006base",
+ "rho": "v006",
+ "label": "plane",
+ "build_s": 24.7,
+ "base_thickness_mm": 17.79,
+ "inner_volume_to_fill_ml": 750.0,
+ "brimful_ml": 811.7,
+ "glass_height_mm": 226.9,
+ "overall_with_capsule_mm": 238.1,
+ "max_width_mm": 89.0,
+ "checks": [
+  [
+   "Glass height",
+   226.9,
+   226.9,
+   0.05,
+   "PASS"
+  ],
+  [
+   "Glass max width X",
+   89.0,
+   89.0,
+   0.5,
+   "PASS"
+  ],
+  [
+   "Overall height",
+   238.1,
+   238.1,
+   0.05,
+   "PASS"
+  ],
+  [
+   "Capsule skirt from cap",
+   66.27,
+   66.27,
+   0.05,
+   "PASS"
+  ],
+  [
+   "Wrap crown from cap",
+   79.63,
+   79.64,
+   0.6,
+   "PASS"
+  ],
+  [
+   "Wrap bottom from cap",
+   165.87,
+   165.9,
+   3.5,
+   "PASS"
+  ],
+  [
+   "Collar top",
+   23.66,
+   23.66,
+   0.05,
+   "PASS"
+  ],
+  [
+   "Collar bottom",
+   37.64,
+   37.64,
+   0.05,
+   "PASS"
+  ],
+  [
+   "Roundel centre",
+   195.9,
+   195.9,
+   0.05,
+   "PASS"
+  ],
+  [
+   "Roundel film dia",
+   46.71,
+   46.71,
+   0.1,
+   "PASS"
+  ],
+  [
+   "Inner volume to fill (ml)",
+   750.0,
+   750.0,
+   15.0,
+   "PASS"
+  ]
+ ],
+ "checks_all_pass": true,
+ "render_s": {
+  "glass34": 11.9,
+  "glasshero": 13.0,
+  "glassshoulder": 14.2,
+  "shoulder": 16.1,
+  "neck": 13.8,
+  "heel": 16.7
+ },
+ "total_s": 110.7
+}

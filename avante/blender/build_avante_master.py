@@ -1,6 +1,9 @@
 """
-Avante Brandy — master scene builder (avante_master_v005)
+Avante Brandy — master scene builder (avante_master_v007)
 ==========================================================
+v007 (research/v006_study, judge's ruling): reference-true Imperial glass from glass_v007.py — straight
+52 deg cone cut by the chamfered square (arch at ~156.6 centre / ~146 corners), rho 4 rolling-ball fillet,
+R 1 vertical edges, 32 deg heel bevel, flat floor; label kept as approved (rev D datums).
 v005 (3 Nov 2026, research/v005_study): reference-led foil, emboss, paper and label pass.
 Client decisions: dyed-through navy stock, 0.15 mm label, bird/spear graphic toned down,
 angled macro cameras added, roundel keeps raised 0.04 mm foil. Run prep_v005_textures.py first.
@@ -29,7 +32,7 @@ MM = 0.001  # mm → metres
 # vs height above base, glass only — from the user's cap-off photo scaled to
 # the supplier height 226.9 mm (V). ±0.7 mm.
 PROFILE = [(0, 55.6), (1, 60.0), (2, 62.2), (3.5, 63.8), (5, 64.9), (7.5, 68.5), (10, 71.6),
-           (20, 73.0), (40, 75.6), (60, 77.0), (80, 79.6), (100, 83.0), (120, 85.0), (140, 87.7),
+           (20, 73.0), (40, 75.6), (60, 77.0), (80, 79.6), (100, 83.0), (120, 85.0), (140, 88.1),
            (145, 89.0), (150, 89.0), (152.5, 88.9), (155, 88.4), (157.5, 85.5), (160, 80.3),
            (162.5, 74.0), (165, 67.6), (167.5, 60.8), (170, 54.2), (172.5, 48.5), (175, 43.5),
            (177.5, 39.8), (180, 36.8), (182.5, 35.8), (185, 35.0), (188, 34.3), (190, 34.1),
@@ -43,14 +46,15 @@ WALL = 3.6               # A side wall; thinner so the heavier heel still holds 
 BORE = 26.0              # P neck bore
 CHAMFER = 0.0754         # P chamfer leg / side (W2124 ratio)
 N_RING = 256
-EDGE_SOFT = 0.7          # P vertical-edge softening (mm)
+EDGE_SOFT = 0.125        # v007: soft-min width k; vertical edge R = 7.91 k = 1.0 mm (v006 0.7 was R 5.5)
+GLASS_MODEL = 'v007'     # 'v007' = glass_v007.py (reference-true shoulder); 'legacy' = v006 dome below
 LABEL_T = 0.15           # D v005 client: dyed-through navy felt stock incl. adhesive (mm)
 LABEL_GAP = 0.005        # v005: adhesive-wetted contact, no air film (mm)
 LABEL_BEVEL = 0.025      # v005: softened die-cut edge (mm)
 EMB_H = 0.20             # P emboss height EMB-01 (mm)
 ROUNDEL_RELIEF = 0.04    # A stamped-foil relief on film (mm); stays within approved foil on film
-HEEL_R = 12.0            # A inner heel fillet radius (mm)
-PUNT_H = 3.5             # A inner floor dome height (mm)
+HEEL_R = 5.0             # v007 (judge, raw2): inner heel fillet radius (mm)
+PUNT_H = 0.0             # v007 (raw2 shows a flat inner floor); was 3.5
 BASE_T = 20.0            # solved in main()
 
 # rev D label placement (mm, heights above base)
@@ -107,40 +111,78 @@ def width_at(z):
             return ((2 * t3 - 3 * t2 + 1) * _PY[i] + (t3 - 2 * t2 + t) * _PH[i] * _PM[i]
                     + (-2 * t3 + 3 * t2) * _PY[i + 1] + (t3 - t2) * _PH[i] * _PM[i + 1])
 
-def roundness(z):  # 0 = chamfered square body, 1 = round neck
-    t = min(max((z - 150.0) / 32.0, 0.0), 1.0)
+def roundness(z):  # 0 = chamfered square, 1 = round. v005b: only the neck finish; the dome rounds the shoulder
+    t = min(max((z - 182.0) / 4.0, 0.0), 1.0)
     return t * t * (3 - 2 * t)
+
+# v005b shoulder (client bottle refs, Figma 56:35): a revolved dome cutting the square body, so each flat
+# face ends in an arch (high at the panel centre, carved down at the corners) instead of a straight crease.
+# The body square is held above Z_HOLD; the dome follows the measured front silhouette above Z_ARCH_F and
+# eases out to clear the corners by Z_ARCH_C. A: arch heights read from the refs and the rev D wrap crown.
+Z_HOLD = 147.5  # v007: PROFILE slope is 0 here, so holding the square adds no break (v006 152.5 left a 1.9 deg ring)
+Z_ARCH_C, Z_ARCH_F, ARCH_K = 131.0, 157.5, 1.2  # legacy v006 dome only (GLASS_MODEL = 'legacy')
+
+def softmin(a, b, k):
+    m = min(a, b)
+    return m - k * math.log(math.exp(-(a - m) / k) + math.exp(-(b - m) / k))
+
+_SR = {}
+def shoulder_R(z):
+    """Dome radius (mm) at height z: the front silhouette above Z_ARCH_F, a monotone Hermite ease below it
+    that leaves the corners untouched (R = corner radius + 4k, zero slope) at Z_ARCH_C, growing below."""
+    if not _SR:
+        S = width_at(Z_HOLD); _SR['rc'] = max(sq_radius(math.radians(a / 10), S) for a in range(0, 901)) + 4 * ARCH_K
+        _SR['rf'] = width_at(Z_ARCH_F) / 2; _SR['mf'] = (width_at(Z_ARCH_F + 0.25) - width_at(Z_ARCH_F - 0.25)) / 2 / 0.5
+    if z >= Z_ARCH_F: return width_at(z) / 2
+    if z <= Z_ARCH_C: return _SR['rc'] + 2.0 * (Z_ARCH_C - z)
+    L = Z_ARCH_F - Z_ARCH_C; t = (z - Z_ARCH_C) / L; t2, t3 = t * t, t * t * t
+    return (2 * t3 - 3 * t2 + 1) * _SR['rc'] + (-2 * t3 + 3 * t2) * _SR['rf'] + (t3 - t2) * L * _SR['mf']
+
+def dome_cut(r, z, inset=0.0):
+    """Section radius r cut by the shoulder dome, offset inward by inset (wall, liquid)."""
+    return softmin(r, shoulder_R(z) - inset, ARCH_K) if z > Z_ARCH_C - 20 else r
+
+def body_S(z):  # square body width; held above the shoulder line, where the dome takes over
+    return width_at(min(z, Z_HOLD))
+
+def outer_r(theta, z):
+    return dome_cut(section_r(theta, body_S(z), roundness(z)), z)
 
 def sq_radius(theta, S):
     h, a = S / 2, CHAMFER * S
     c, s = abs(math.cos(theta)), abs(math.sin(theta))
     r1 = h / max(c, s)
     r2 = (S - a) / (c + s)
-    k = EDGE_SOFT  # soft-min ≈ R1–2 mm fillets on the chamfer edges (P)
-    return -k * math.log(math.exp(-r1 / k) + math.exp(-r2 / k))
+    # v007: stable soft-min (the raw exp(-r/k) form underflows below k ~0.078); R = 7.91 k on these edges
+    return softmin(r1, r2, EDGE_SOFT)
 
 def section_r(theta, S, t):
     return (1 - t) * sq_radius(theta, S) + t * S / 2
 
-def ring(z, S, t, n=N_RING, off=0.0):
+def ring(z, S, t, n=N_RING, off=0.0, cut=None):
+    """cut: None = plain section; a number = also cut by the shoulder dome, inset by that many mm."""
     pts = []
     for i in range(n):
         th = 2 * math.pi * i / n
-        r = section_r(th, S, t) + off
+        r = section_r(th, S, t)
+        if cut is not None: r = dome_cut(r, z, cut)
+        r += off
         pts.append(((r * math.cos(th)) * MM, (r * math.sin(th)) * MM, z * MM))
     return pts
 
-def section_area(S, t, n=360):
+def section_area(S, t, n=360, z=None, cut=None):
     a = 0.0
+    def r(th):
+        v = section_r(th, S, t)
+        return dome_cut(v, z, cut) if cut is not None else v
     for i in range(n):
         th0, th1 = 2 * math.pi * i / n, 2 * math.pi * (i + 1) / n
-        r0, r1 = section_r(th0, S, t), section_r(th1, S, t)
-        a += 0.5 * r0 * r1 * math.sin(th1 - th0)
+        a += 0.5 * r(th0) * r(th1) * math.sin(th1 - th0)
     return a  # mm²
 
 def inner_width(z, base_t=None):
     base_t = BASE_T if base_t is None else base_t
-    w = BORE if z >= 185 else max(width_at(z) - 2 * WALL, BORE)
+    w = BORE if z >= 185 else max(body_S(z) - 2 * WALL, BORE)  # v005b: held square, the dome cuts it
     dz = z - base_t
     if 0 <= dz < HEEL_R:  # v004: filleted inner heel, no hard 90 degree floor
         w -= 2 * (HEEL_R - math.sqrt(max(HEEL_R ** 2 - (HEEL_R - dz) ** 2, 0.0)))
@@ -151,7 +193,7 @@ def inner_volume(z0, z1, dz=0.25):
     while z < z1:
         zz = min(z + dz, z1)
         zm = (z + zz) / 2
-        v += section_area(inner_width(zm, z0), roundness(zm)) * (zz - z)
+        v += section_area(inner_width(zm, z0), roundness(zm), z=zm, cut=(WALL if zm < 185 else None)) * (zz - z)
         z = zz
     W0 = inner_width(z0, z0)
     return (v - 0.5 * PUNT_H * W0 * W0) / 1000.0  # ml, less the punt dome
@@ -446,8 +488,9 @@ def clear_scene():
             if x.users == 0: blk.remove(x)
 
 def build_glass(C, base_t):
-    outer = [ring(z, width_at(z), roundness(z)) for z in z_samples(0.0, GLASS_H)]
-    inner = [ring(z, S, t) for z, S, t in reversed(inner_stack(base_t, GLASS_H))]
+    # v005b: held body square cut by the revolved shoulder dome (arched faces), inner wall inset by WALL
+    outer = [ring(z, body_S(z), roundness(z), cut=0.0) for z in z_samples(0.0, GLASS_H)]
+    inner = [ring(z, S, t, cut=(WALL if z < 185 else None)) for z, S, t in reversed(inner_stack(base_t, GLASS_H))]
     verts, faces = loft(outer + inner, close_bottom=(0, 0, 1.2 * MM), close_top=(0, 0, (base_t + PUNT_H) * MM))
     ob = mesh_from('GLS-01_Glass', verts, faces, C)
     recalc_normals(ob); shade_smooth(ob, 40)
@@ -460,19 +503,19 @@ def build_liquid(C, base_t):
     for z, S, t in inner_stack(base_t, FILL_Z):
         if z >= FILL_Z: continue
         lift = OV if z < base_t + HEEL_R else 0.0
-        rings.append(ring(z - lift, S + 2 * OV, t))
+        rings.append(ring(z - lift, S + 2 * OV, t, cut=WALL - OV))
     Wf, tf = inner_width(FILL_Z, base_t) + 2 * OV, roundness(FILL_Z)
-    rings.append(ring(FILL_Z, Wf, tf))
+    rings.append(ring(FILL_Z, Wf, tf, cut=WALL - OV))
     # meniscus for about 40% ABV: 1.8 mm climb, flat within 2.5 mm (derived estimate)
     for dd, hh in ((0.0, 1.8), (0.1, 1.3), (0.3, 0.85), (0.6, 0.48), (1.0, 0.22), (1.6, 0.07), (2.5, 0.0)):
-        rings.append(ring(FILL_Z + hh, Wf - 2 * dd, tf))
+        rings.append(ring(FILL_Z + hh, Wf - 2 * dd, tf, cut=WALL - OV + dd))
     verts, faces = loft(rings, close_bottom=(0, 0, (base_t + PUNT_H - OV) * MM), close_top=(0, 0, FILL_Z * MM))
     ob = mesh_from('LIQ-01_Brandy', verts, faces, C)
     recalc_normals(ob); shade_smooth(ob, 40)
     return ob
 
 def capsule_raw(theta, z):
-    r_glass = section_r(theta, width_at(min(z, GLASS_H)), roundness(z)) if z <= GLASS_H else 0
+    r_glass = outer_r(theta, min(z, GLASS_H)) if z <= GLASS_H else 0
     r_clos = 20.9 if z >= CAP_TOP - 14.8 else (17.8 if z >= CAP_TOP - 23.0 else 0)  # P bar-top head/band
     return max(r_glass, r_clos) + 0.06
 
@@ -485,7 +528,7 @@ def capsule_profile(z):
         for k in range(-12, 13):
             zz = z + w * k / 12; g = math.cos(math.pi * k / 24) ** 2
             tot += g * capsule_raw(0.0, min(zz, CAP_TOP)); W += g
-        r_glass = section_r(0.0, width_at(min(z, GLASS_H)), roundness(z)) + 0.06 if z <= GLASS_H else 0.0
+        r_glass = outer_r(0.0, min(z, GLASS_H)) + 0.06 if z <= GLASS_H else 0.0
         _CAP_TABLE[key] = max(tot / W, r_glass)  # film can never sit under the glass bead
     return _CAP_TABLE[key]
 
@@ -547,7 +590,7 @@ def dev_xy(sE, v):
 
 def surf_xyz(sE, v, off):
     z = Z_EDGE - v if v >= 0 else Z_EDGE + (-v) * math.sin(math.radians(49))
-    S = width_at(z); a = CHAMFER * S; h = S / 2; hf3 = h - a
+    S = body_S(z); a = CHAMFER * S; h = S / 2; hf3 = h - a  # v005b: held body square
     sgn = 1 if sE >= 0 else -1; s = abs(sE)
     if s <= HF_E:
         x, y = (s / HF_E) * hf3, -h
@@ -557,7 +600,7 @@ def surf_xyz(sE, v, off):
         u = (s - S1_E) / (S2_E - S1_E); x, y = h, lerp(-h + a, h - a, u)
     x *= sgn
     th = math.atan2(y, x)
-    r = section_r(th, S, roundness(z)) + off
+    r = outer_r(th, z) + off  # v005b: the wrap follows the arched shoulder
     return (r * math.cos(th) * MM, r * math.sin(th) * MM, z * MM)
 
 def inside(pt, poly):
@@ -875,7 +918,10 @@ def build_studio(C):
             ('CAM_Macro_CollarFlag', (0.06, -0.2, 0.216), 100, (0.027, 0, 0.2075), 0.205, 11, 0.2075, 0),
             ('CAM_Angle_Avante', None, 135, (0.0, -0.045, 0.139), 0.30, 16, 0.139, 25),
             ('CAM_Angle_Roundel', None, 135, (0.0, -0.038, 0.0422), 0.30, 11, 0.0422, -20),
-            ('CAM_Angle_CollarFlag', None, 100, (0.03, 0.0, 0.2075), 0.26, 11, 0.2075, 15)):
+            ('CAM_Angle_CollarFlag', None, 100, (0.03, 0.0, 0.2075), 0.26, 11, 0.2075, 15),
+            # v007 review cameras level with the shoulder (the hero at z 130 looks up and makes it read lower)
+            ('CAM_Shoulder', (0.0, -0.49, 0.155), 135, (0, 0, 0.155), None, None, 0.137, 0),
+            ('CAM_Shoulder_34', (0.258, -0.369, 0.155), 135, (0, 0, 0.155), None, None, 0.137, 0)):
         cd = bpy.data.cameras.new(name); cd.lens = lens
         if focus:
             cd.dof.use_dof = True; cd.dof.aperture_fstop = fstop; cd.dof.focus_distance = focus
@@ -916,6 +962,12 @@ def render_settings(samples=128, res=(1000, 1600)):
         sc.view_settings.view_transform = 'AgX'
         sc.view_settings.look = 'None'  # v004: no look hue shift on amber and navy
     except Exception: pass
+
+if GLASS_MODEL == 'v007':  # replaces glass, liquid, outer_r, inner_volume and the wrap mapping (see glass_v007.py)
+    try: sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    except NameError: pass
+    import glass_v007
+    GLASS_V007_INFO = glass_v007.install(sys.modules[__name__])
 
 def main():
     clear_scene()

@@ -1,0 +1,16 @@
+body half-width (face plane), Z_HOLD   z= 152.5: slope below -0.0333, above +0.0000 -> crease 1.91 deg
+dome radius, Z_ARCH_F join             z= 157.5: slope below -0.7710, above -0.7447 -> crease 0.96 deg
+dome radius, Z_ARCH_C join             z= 131.0: slope below -2.0000, above -0.0000 -> crease 63.43 deg
+  pchip curvature jump at knot 145: d2r below -0.1181, above +0.0000 1/mm
+  pchip curvature jump at knot 150: d2r below +0.0000, above -0.0213 1/mm
+  pchip curvature jump at knot 155: d2r below -0.0596, above -0.5233 1/mm
+  pchip curvature jump at knot 157.5: d2r below +0.0640, above -0.3929 1/mm
+  pchip curvature jump at knot 160: d2r below +0.0771, above -0.1849 1/mm
+  pchip curvature jump at knot 162.5: d2r below +0.0805, above +0.0149 1/mm
+  pchip curvature jump at knot 165: d2r below -0.0540, above -0.0822 1/mm
+  pchip curvature jump at knot 182.5: d2r below -0.0444, above +0.0089 1/mm
+  pchip curvature jump at knot 185: d2r below +0.0248, above -0.0071 1/mm
+  pchip curvature jump at knot 188: d2r below +0.0520, above -0.0136 1/mm
+  pchip curvature jump at knot 190: d2r below +0.0818, above -0.0000 1/mm
+  pchip curvature jump at knot 215: d2r below +0.0000, above +1.8665 1/mm
+  pchip curvature jump at knot 216.5: d2r below -0.5332, above +2.0860 1/mm

@@ -1,0 +1,53 @@
+theta 0
+   z 156.00 r 43.352 slope-from-vertical 26.95 deg
+   z 156.25 r 43.221 slope-from-vertical 28.18 deg
+   z 156.50 r 43.084 slope-from-vertical 29.25 deg
+   z 156.75 r 42.942 slope-from-vertical 30.13 deg
+   z 157.00 r 42.794 slope-from-vertical 30.85 deg
+   z 157.25 r 42.643 slope-from-vertical 31.41 deg
+   z 157.50 r 42.489 slope-from-vertical 31.46 deg
+   z 157.75 r 42.328 slope-from-vertical 34.77 deg
+   z 158.00 r 42.143 slope-from-vertical 38.08 deg
+   z 158.25 r 41.937 slope-from-vertical 40.86 deg
+   z 158.50 r 41.711 slope-from-vertical 43.14 deg
+   z 158.75 r 41.469 slope-from-vertical 44.95 deg
+   z 159.00 r 41.213 slope-from-vertical 46.31 deg
+theta 40.34
+   z 156.00 r 43.966 slope-from-vertical 40.30 deg
+   z 156.25 r 43.756 slope-from-vertical 39.90 deg
+   z 156.50 r 43.548 slope-from-vertical 39.49 deg
+   z 156.75 r 43.344 slope-from-vertical 39.05 deg
+   z 157.00 r 43.142 slope-from-vertical 38.60 deg
+   z 157.25 r 42.944 slope-from-vertical 38.13 deg
+   z 157.50 r 42.750 slope-from-vertical 37.24 deg
+   z 157.75 r 42.552 slope-from-vertical 39.93 deg
+   z 158.00 r 42.332 slope-from-vertical 42.54 deg
+   z 158.25 r 42.094 slope-from-vertical 44.61 deg
+   z 158.50 r 41.840 slope-from-vertical 46.22 deg
+   z 158.75 r 41.573 slope-from-vertical 47.44 deg
+   z 159.00 r 41.297 slope-from-vertical 48.30 deg
+theta 45
+   z 156.00 r 43.966 slope-from-vertical 40.30 deg
+   z 156.25 r 43.756 slope-from-vertical 39.90 deg
+   z 156.50 r 43.548 slope-from-vertical 39.49 deg
+   z 156.75 r 43.344 slope-from-vertical 39.05 deg
+   z 157.00 r 43.142 slope-from-vertical 38.60 deg
+   z 157.25 r 42.944 slope-from-vertical 38.13 deg
+   z 157.50 r 42.750 slope-from-vertical 37.24 deg
+   z 157.75 r 42.552 slope-from-vertical 39.93 deg
+   z 158.00 r 42.332 slope-from-vertical 42.54 deg
+   z 158.25 r 42.094 slope-from-vertical 44.61 deg
+   z 158.50 r 41.840 slope-from-vertical 46.22 deg
+   z 158.75 r 41.573 slope-from-vertical 47.44 deg
+   z 159.00 r 41.297 slope-from-vertical 48.30 deg
+theta0 z 151.5 slope 3.89 deg
+theta0 z 152.0 slope 5.25 deg
+theta0 z 152.4 slope 6.55 deg
+theta0 z 152.6 slope 5.58 deg
+theta0 z 153.0 slope 7.31 deg
+front W(150.0)=88.97
+front W(152.5)=88.66
+front W(155.0)=87.59
+front W(157.5)=84.98
+front W(160.0)=80.23
+front W(162.5)=74.00
