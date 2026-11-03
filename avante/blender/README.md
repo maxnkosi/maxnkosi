@@ -241,3 +241,54 @@ emblem.
 - The shared v009 key grazes the front faces, so the cream stock (C10 label, cream bands) reads as warm grey
   (about 50 % exposure). Lifting it would change the approved Concept 1 baseline, so this needs your decision.
 - Typography on C05, C07 and C10 is 5–9 % smaller than Concept 1's, from the fit rule above.
+
+## Figma design review (review system v001, 3 Nov 2026)
+
+Figma file `JcxeRDhCrtgZUXhTWQn2hV` (AVANTE). Six pages were added after page 03; Page 1 and pages 01–03 are untouched
+(checked layer by layer: the five editable copies match their Page 1 sources exactly, apart from 0.002-unit float noise on one rotated rectangle).
+
+| Page | Node | Contents |
+| ---- | ---- | -------- |
+| 04 — Concept 01 \| Design Review | 61:2 (frame 62:2) | artwork component 62:31 · renders v001 · 7 callouts · register |
+| 05 — Concept 05 \| Design Review | 61:3 (frame 64:2) | artwork component 64:31 · 8 callouts |
+| 06 — Concept 06 \| Design Review | 61:4 (frame 64:413) | artwork component 64:442 · 9 callouts |
+| 07 — Concept 07 \| Design Review | 61:5 (frame 64:868) | artwork component 64:897 · 9 callouts |
+| 08 — Concept 10 \| Design Review | 61:6 (frame 64:1359) | artwork component 64:1388 · 9 callouts |
+| 09 — All Concepts \| Comparison | 61:7 (frame 65:2) | lineup renders · one row per concept, artwork as INSTANCES · open decisions |
+
+**Concept page layout.** A = editable vector, a local component holding a verbatim copy of the Page 1 group (the
+source of truth for that concept's artwork from now on). B = front hero, C = three-quarter, both v001 renders.
+Renders are registered to the vector: 9.624 Figma units per render pixel (front face of CAM_Hero at 1000 × 1600,
+= rev D 0.019356 mm/u), shoulder line Z_EDGE 150.6 mm on artwork y 3851, dashed magenta guides across all three
+panels. Differences between drawing and render are therefore real: the C01 label is 6 mm lower (v009), C05/C07/C10
+are fitted at 95.2 / 91.4 %, C06 sits ≈10 mm higher (label bottom fixed 15 mm above base).
+Numbered callouts with leader lines point at the components; the **material & finish register** below lists per
+component: ID, Figma nodes, substrate, thickness, surface/roughness, ink, foil type/colour, foil finish, relief +
+height, coating, Blender material, status. A render archive box receives superseded renders.
+
+**Status convention** (component `Review / Status chip`, 61:16): APPROVED user-approved treatment · PROPOSED
+recommendation awaiting review · REVIEW needs a design decision · SUPERSEDED historical. Only Concept 1 carries
+APPROVED (the owner-approved direction of page 02); every variant treatment is PROPOSED or REVIEW. Gold processes
+are kept distinct: FOIL-01 hot foil (flat or raised with EMB-01), PRT-01 fired bright-gold print on glass, MET-01
+metallic ink (capsule pinline), MED-01 solid struck metal (C07 coin). Thickness, depth and grade values marked (P)
+are proposals for visual authenticity, not manufacturing specifications.
+
+**Figma → Blender update procedure** (`figma_review/`). Change detection is implemented and tested; applying a
+change is a Claude-run procedure, not automatic synchronisation.
+1. The user edits the artwork component on a concept page (page 09 follows automatically, it shows instances).
+2. Claude runs `figma_signature.js` read-only through `use_figma` and saves the result as JSON.
+3. `python3 figma_review/diff_review.py figma_review/baseline_v001.json CURRENT.json` lists changed, added and
+   removed layers per concept, maps each review-copy node to its Page 1 source id (`review_map.json`) and routes it
+   to the Blender work: which `variants_concepts.SPEC` layer, which composite texture (COLOR / MASK-FOIL /
+   HEIGHT-EMB), which object, or "no Blender change" for the bottle illustration. Tested 3 Nov 2026 on a temporary
+   duplicate of C07 with four edits: all four found and routed, nothing else flagged (`synctest_2026-11-03.txt`).
+4. Claude re-exports only the changed layers from the review copy (Figma `download_assets`), saves them under the
+   source id in `textures/variants_src/<cid>/` (and updates the layer bounds in its manifest if a layer moved),
+   rebuilds only that concept into a new master version (`avante_variants_master_v002.blend`; v001 stays), checks
+   that the other concepts and the C01 signature are unchanged (`check_variants_master.py`), and renders that
+   concept's hero and three-quarter.
+5. The new renders replace the image fills of panels B and C (`render_rects` in `review_map.json`) and of the
+   matching row on page 09; the previous pair moves to the page's render archive, marked SUPERSEDED.
+6. A new baseline is saved (`baseline_v002.json`) and the change is logged in Notion.
+Concept 1 is the exception: its Blender label is the rev D construction from page 01 § L built by
+`build_avante_master`, so a C01 artwork change is routed to that pipeline by hand.

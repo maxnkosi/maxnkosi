@@ -1,0 +1,12 @@
+
+C07: 4 changed, 0 added, 0 removed
+  CHANGED  0/1/2       64:905 ← 4:194   Rectangle 14                       → label ground / band colours (mask group)
+           update the band y-ranges and colours in SPEC[...]["labels"][...]["stops"]; rebuild that label
+  CHANGED  0/7         64:925 ← 4:214   AVANTE                             → LBL-FRONT-02 layer (emboss)
+           re-export 64:925 (review copy of 4:214, saved as 4:214); composite C07_LBL-FRONT-02 (COLOR / MASK-FOIL / HEIGHT-EMB); rebuild C07_LBL-FRONT-02
+  CHANGED  0/8/2       64:929 ← 4:218   Vector                             → MED-COIN-01 metal medallion (emboss)
+           re-export 64:929 (review copy of 4:218, saved as 4:218); composite C07_MED-COIN-01; rebuild C07_MED-COIN-01
+  CHANGED  0/9         64:930 ← 4:219   CAPE BRANDY                        → LBL-FRONT-02 layer (foil)
+           re-export 64:930 (review copy of 4:219, saved as 4:219); composite C07_LBL-FRONT-02 (COLOR / MASK-FOIL / HEIGHT-EMB); rebuild C07_LBL-FRONT-02
+
+TOTAL 4 layer change(s)
