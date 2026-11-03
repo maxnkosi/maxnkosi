@@ -1,0 +1,35 @@
+<frame id="4:305" name="Group 8" x="30273.87890625" y="100" width="4969.24609375" height="11950.189453125">
+  <boolean-operation id="4:306" name="Union" x="30491.632736206055" y="247.990234375" width="4596.9326171875" height="11802.19921875">
+    <vector id="4:307" name="Union" x="30496.55867099762" y="247.99023430445828" width="4580.10546875" height="4422.3544921875" />
+    <vector id="4:308" name="Rectangle 2" x="30481.324219703674" y="3868.54345703125" width="4619.6005859375" height="8181.6455078125" />
+  </boolean-operation>
+  <frame id="4:309" name="Mask group" x="30483.07421875" y="247.990234375" width="4615.7431640625" height="11802.19921875">
+    <vector id="4:310" name="Union" x="30483.07421875" y="247.990234375" width="4615.7431640625" height="11802.19921875" />
+    <rounded-rectangle id="4:311" name="Rectangle 9" x="30469.15234375" y="3002.07763671875" width="4608.6328125" height="2904.06298828125" />
+    <vector id="4:312" name="Rectangle 8" x="30469.15234375" y="11495.6259765625" width="4608.6328125" height="3562.258544921875" />
+    <rounded-rectangle id="4:313" name="Rectangle 10" x="30454.19140625" y="11332.8466796875" width="4608.6328125" height="316.557861328125" />
+    <rounded-rectangle id="4:314" name="Rectangle 11" x="30451.87109375" y="7945.47412109375" width="4608.6328125" height="21.153564453125" />
+  </frame>
+  <boolean-operation id="4:315" name="Union" x="30491.632736206055" y="247.990234375" width="4596.9326171875" height="11802.19921875" hidden="true">
+    <vector id="4:316" name="Union" x="30496.55867576599" y="247.9902342993339" width="4580.10546875" height="4422.3544921875" />
+    <vector id="4:317" name="Rectangle 3" x="30481.324219703674" y="3868.54345703125" width="4619.6005859375" height="8181.6455078125" />
+  </boolean-operation>
+  <rounded-rectangle id="4:318" name="Rectangle 1" x="30273.87890625" y="8293.322265625" width="4969.24609375" height="3485.357666015625" />
+  <rounded-rectangle id="4:319" name="Rectangle 5" x="30273.87890625" y="6166.48828125" width="4969.24609375" height="6066.48828125" />
+  <rounded-rectangle id="4:320" name="Rectangle 4" x="30273.87890625" y="7418.0771484375" width="4969.24609375" height="776.7447509765625" />
+  <vector id="4:321" name="Vector" x="31000.33984375" y="9031.80078125" width="3516.33740234375" height="1521.73583984375" />
+  <vector id="4:322" name="AVANTE" x="30994.41796875" y="4568.32275390625" width="3528.171875" height="505.2137756347656" />
+  <frame id="4:323" name="Group 7" x="31662.08203125" y="6783.89990234375" width="2257.732421875" height="2257.732421875">
+    <ellipse id="4:324" name="Ellipse 1" x="31662.08203125" y="6783.89990234375" width="2257.732421875" height="2257.732421875" />
+    <ellipse id="4:325" name="Ellipse 2" x="31739.18359375" y="6870.96142578125" width="2083.609375" height="2083.609375" />
+    <vector id="4:326" name="Vector" x="31845.50390625" y="6970.44189453125" width="1890.89013671875" height="1884.64794921875" />
+  </frame>
+  <text id="4:327" name="CAPE BRANDY" x="31640.44921875" y="10153.0205078125" width="2301" height="364" />
+  <text id="4:328" name="BOTTLED &amp; PRODUCED IN SOUTH AFRICA" x="31610.99609375" y="11116.13671875" width="2232" height="119" />
+  <text id="4:329" name="V.S.O.P" x="32102.50390625" y="9221.1005859375" width="1312" height="457" />
+  <text id="4:330" name="Very Superior Old Pale" x="31078.80078125" y="9659.0439453125" width="3196" height="452" />
+  <text id="4:331" name="Masterfully distilled from only the finest grapes and aged in French oak barrels, the Avante VSOP offers an unparalleled, delicately smooth drinking experience like no other." x="31128.99609375" y="5262.40185546875" width="3393.59375" height="1280" />
+  <rounded-rectangle id="4:332" name="Rectangle 7" x="31904.27734375" y="1728.41455078125" width="2978.26171875" height="721.73583984375" />
+  <vector id="4:333" name="Vector" x="34262.09765625" y="1826.01513671875" width="528.2778930664062" height="526.533935546875" />
+  <text id="4:334" name="Very Superior Old Pale" x="31957.316162109375" y="1954.782470703125" width="1902" height="269" />
+</frame>

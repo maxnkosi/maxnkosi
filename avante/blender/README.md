@@ -167,3 +167,77 @@ builder (`GLASS_MODEL = 'v007'`; `'legacy'` keeps the v006 dome for comparison).
   **0.67 mm** above the roundel film — reported as W2 (under 2 mm is tight for labelling tolerance).
 - Checks: 29 (11 + 18), all pass; W2 warning. Arch-corner targets are now the geometry of the rounded corner (the
   references have a chamfer, so there is no reference value for them).
+
+## Variants master v001 (3 Nov 2026) — Concepts 1, 5, 6, 7 and 10 in one studio
+
+`avante_variants_master_v001.blend` holds all five bottles in **one scene and one shared studio**. It is built from
+the approved v009 master, which is never re-saved (`build_variants_master.py` refuses to write over it).
+
+    blender -b avante_master_v009.blend --python build_variants_master.py -- --save avante_variants_master_v001.blend
+    blender -b avante_variants_master_v001.blend --python check_variants_master.py
+    blender -b avante_variants_master_v001.blend --python render_variants.py -- variants_v001 [shot,names] [sample_scale]
+
+**Hierarchy:**
+- `AVANTE_VARIANTS_MASTER` contains `STUDIO_SHARED` (Floor, Background, Softboxes, Reflectors, Flags), `CAMERAS`
+  (Lineup_Hero, Lineup_ThreeQuarter, Individual_Hero, Individual_ThreeQuarter, Material_Macros) and
+  `CONCEPT_01/05/06/07/10`.
+- Each concept has `Cxx_Bottle_Glass`, `Liquid`, `Closure`, `Labels`, `Emblems` and `Materials` collections, all
+  parented to a `Cxx_ROOT` empty.
+
+**What is shared and what isn't:**
+- Glass, liquid and capsule are linked duplicates of the v009 meshes, so all five bottles are physically
+  identical.
+- Every label, print, emblem and label material is a per-concept copy. A check confirms that no label material or
+  mesh is shared between concepts.
+
+**Staging:** `variants_stage.py`, also stored in the .blend as a text block.
+- `stage('single', 'C06', cam)` stands that concept on the v009 hero mark and hides the other four from render, so
+  they cast no stray shadows or reflections. Lights, cards and cameras are the v009 rig, unchanged.
+- `stage('lineup', None, cam)` stands all five on their lineup marks, 135 mm apart.
+- Lineup-only extras: a floor apron, a 3x-wide copy of the sweep, a wide foil strip and a back card behind each
+  bottle.
+
+**Concept 1 is v009 unchanged:**
+- Its mesh, transform, material and modifier signatures are identical to v009.
+- Its hero render matches v009 to within noise (mean |Δ| 7e-6).
+
+**Concepts 5, 6, 7 and 10** are built by `variants_concepts.py` and `variants_kit.py` from the Figma layer exports
+in `textures/variants_src/` (nodes 4:3, 4:305, 4:187 and 4:227).
+- **Artwork:** composited 1:1 into `textures/variants/`, never redrawn. The exports arrive flattened on white, so
+  alpha is recovered from each layer's single ink colour. The medallion ring strokes, lost in the flattened
+  export, are redrawn to the measured radii.
+- **Placement:** one uniform scale per concept. Label bottom at 15 mm, clear of the heel. The top element sits at
+  most at 153 mm, 1 mm under the arch onset at the panel centre. Scale is the smaller of rev D (0.019356 mm/u) and
+  what fits:
+  - **C06: 100 %** (rev D)
+  - **C05: 95.2 %**
+  - **C07 and C10: 91.4 %**
+
+  Their artwork is taller than the Imperial's flat face. At rev D, Concept 7's coin would sit on the shoulder
+  curve.
+- **Labels:** wrap labels on the v008 true-length wrap, level top and bottom edges, front and sides with the back
+  clear, as Concept 1.
+- **Physical interpretation:**
+
+| Figma element | Physical treatment |
+| --- | --- |
+| Navy labels (C05, C06, C07) | SUB-01 dyed-through navy felt, 0.15 mm; cream ink; FOIL-01 hot foil; EMB-01 0.2 mm emboss on wordmarks and monograms (as Concept 1) |
+| Cream label (C10) | SUB-04 natural cream felt; navy ink; navy wordmark blind-embossed; gold spearman in foil |
+| Gold art on bare glass | PRT-01 bright-gold precious-metal screen print, fired on (near-mirror, roughness 0.10–0.16) |
+| Navy medallions (C06, C10) | Navy felt roundel Ø43.7 / Ø40.0 mm; foil ring and embossed foil monogram. C06's overlaps the label top edge |
+| Bronze coin (C07) | MED-01 die-struck metal seal, 0.3 mm. Satin turned field, polished relief, rolled edge |
+| Neck | v009 capsule. All navy on the variants: the four Figma concepts show no gold pinline. Collar flag LBL-NECK-01 (same artwork as Concept 1) on C06, C07 and C10; none on C05 |
+
+**Foil lighting:** single shots aim the v009 foil strip at each concept's own foil copy. A third strip,
+`CRD_Foil_Strip_Print`, is light-linked to the active concept's glass prints. The roundel strip lights its
+emblem.
+
+**Renders:** `renders/variants_v001_*`.
+- Lineup hero and lineup three-quarter, at 2400×1350.
+- Hero and three-quarter for all five concepts, at 1000×1600, 512 samples.
+- Label, angle, emblem and print macros, plus the collar flag, at 2000×1600, 384 samples.
+
+**Open:**
+- The shared v009 key grazes the front faces, so the cream stock (C10 label, cream bands) reads as warm grey
+  (about 50 % exposure). Lifting it would change the approved Concept 1 baseline, so this needs your decision.
+- Typography on C05, C07 and C10 is 5–9 % smaller than Concept 1's, from the fit rule above.
