@@ -10,7 +10,8 @@ SHOTS = [('hero', 'CAM_Hero', (1000, 1600)), ('threequarter', 'CAM_ThreeQuarter'
          ('foil_macro', 'CAM_Macro_Avante', (2000, 1600)), ('roundel_macro', 'CAM_Macro_Roundel', (2000, 1600)),
          ('collarflag_macro', 'CAM_Macro_CollarFlag', (2000, 1600)), ('angle_avante', 'CAM_Angle_Avante', (2000, 1600)),
          ('angle_roundel', 'CAM_Angle_Roundel', (2000, 1600)), ('angle_collarflag', 'CAM_Angle_CollarFlag', (2000, 1600)),
-         ('shoulder', 'CAM_Shoulder', (2000, 1500)), ('shoulder34', 'CAM_Shoulder_34', (2000, 1500))]
+         ('shoulder', 'CAM_Shoulder', (2000, 1500)), ('shoulder34', 'CAM_Shoulder_34', (2000, 1500)),
+         ('corner', 'CAM_Corner', (1600, 2000))]
 sc = bpy.context.scene
 cp = bpy.context.preferences.addons['cycles'].preferences; cp.compute_device_type = 'METAL'; cp.get_devices()
 for d in cp.devices: d.use = True

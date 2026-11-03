@@ -277,15 +277,16 @@ def install(B):
         _SEC[S] = (th, L, [0.0] + [float(np.interp(v, th, L)) for v in (v1, v2, v3)]); return _SEC[S]
 
     def panel_theta(sE, z):
-        th, L, Lv = section_table(z); s = abs(sE)
-        if s <= B.HF_E: l = Lv[0] + (Lv[1] - Lv[0]) * s / B.HF_E
-        elif s <= B.S1_E: l = Lv[1] + (Lv[2] - Lv[1]) * (s - B.HF_E) / (B.S1_E - B.HF_E)
-        else: l = Lv[2] + (Lv[3] - Lv[2]) * (s - B.S1_E) / (B.S2_E - B.S1_E)
-        t = float(np.interp(l, L, th))
+        """v008: true-length wrap. The paper's developed coordinate s is arc length round the filleted section
+        from the front centre, so the label is isometric whatever the chamfer (v007 stretched each dieline panel
+        onto the 0.0754 facets, which would distort the art once the chamfer closed up)."""
+        th, L, Lv = section_table(z)
+        t = float(np.interp(min(abs(sE), L[-1]), L, th))
         return t if sE >= 0 else -math.pi - t
 
     def surf_xyz(sE, v, off):
-        z = B.Z_EDGE - v if v >= 0 else B.Z_EDGE + (-v) * SIN49   # approved rev D datums
+        z = B.Z_EDGE - v if v >= 0 else B.Z_EDGE + (-v) * SIN49   # rev D mapping
+        z -= getattr(B, 'LABEL_DROP', 0.0)                         # v008 client: label 3 mm lower
         th = panel_theta(sE, z)
         r = outer_r(th, z) + off
         return (r * math.cos(th) * MM, r * math.sin(th) * MM, z * MM)

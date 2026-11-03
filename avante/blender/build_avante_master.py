@@ -44,7 +44,8 @@ FILL_ML = 750.0          # V
 CAP_TOP = 238.1          # P (glass + ≈11.2 mm bar-top)
 WALL = 3.6               # A side wall; thinner so the heavier heel still holds 750 ml
 BORE = 26.0              # P neck bore
-CHAMFER = 0.0754         # P chamfer leg / side (W2124 ratio)
+CHAMFER = 0.050          # v008 client: corner chamfer closed up (was 0.0754; refs read 0.045-0.055 W in studies A/D)
+LABEL_DROP = 3.0         # v008 client: wrap label moved 3 mm down (datums 79.64/165.9 -> 82.64/168.9 from cap top)
 N_RING = 256
 EDGE_SOFT = 0.125        # v007: soft-min width k; vertical edge R = 7.91 k = 1.0 mm (v006 0.7 was R 5.5)
 GLASS_MODEL = 'v007'     # 'v007' = glass_v007.py (reference-true shoulder); 'legacy' = v006 dome below
@@ -921,7 +922,9 @@ def build_studio(C):
             ('CAM_Angle_CollarFlag', None, 100, (0.03, 0.0, 0.2075), 0.26, 11, 0.2075, 15),
             # v007 review cameras level with the shoulder (the hero at z 130 looks up and makes it read lower)
             ('CAM_Shoulder', (0.0, -0.49, 0.155), 135, (0, 0, 0.155), None, None, 0.137, 0),
-            ('CAM_Shoulder_34', (0.258, -0.369, 0.155), 135, (0, 0, 0.155), None, None, 0.137, 0)):
+            ('CAM_Shoulder_34', (0.258, -0.369, 0.155), 135, (0, 0, 0.155), None, None, 0.137, 0),
+            # v008 corner close-up: front-right chamfer, label fold and arch corner
+            ('CAM_Corner', (0.254, -0.254, 0.16), 100, (0.042, -0.042, 0.143), 0.30, 11, 0.137, 0)):
         cd = bpy.data.cameras.new(name); cd.lens = lens
         if focus:
             cd.dof.use_dof = True; cd.dof.aperture_fstop = fstop; cd.dof.focus_distance = focus

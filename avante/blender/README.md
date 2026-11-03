@@ -1,4 +1,4 @@
-# Avante Brandy — Blender master scene (v007)
+# Avante Brandy — Blender master scene (v008)
 
 Concept 1 rev D packaging on the 750 ml Imperial bottle, built procedurally from the
 Figma/Notion handoff (Figma file `JcxeRDhCrtgZUXhTWQn2hV`, pages 01–03).
@@ -139,3 +139,16 @@ builder (`GLASS_MODEL = 'v007'`; `'legacy'` keeps the v006 dome for comparison).
   keep and trial on real bottles / custom mould with a higher shoulder.
 - Checks: 26 (11 original + 15 v007 shoulder checks) — ALL PASS; W1 warnings as above.
 - New cameras: `CAM_Shoulder`, `CAM_Shoulder_34` (135 mm, level with the shoulder at z 155).
+
+## v008 changes (3 Nov 2026) — client: close up the corner chamfer, label 3 mm down
+
+`avante_master_v008.blend` is current; v001–v007 untouched.
+- Corner chamfer leg 0.0754 → **0.050** of body width (6.7 → 4.5 mm; facet ≈ 6.3 mm), within the 0.045–0.055 W that
+  studies A/D read on the references. The cone now meets the corners lower: crease 144.75 corner / 156.6 centre,
+  rise 11.9 mm (raw2: 11.7 measured). Base re-solves to 21.0 mm for 750.0 ml.
+- Wrap label moved **3 mm down** (`LABEL_DROP`): crown 82.63, bottom 168.87 from cap top (client instruction, supersedes
+  79.64 / 165.9). Overlap past the arch onset falls to 1.4 mm (centre) / 2.9 mm (fold), still reported as W1.
+- Wrap is now a true-length (isometric) wrap round the filleted section, so the art is not stretched to fit the
+  narrower facets; the approved dieline's panel boundaries no longer coincide exactly with the glass corners.
+- Checks: arch corner targets moved to the reference values for a 4–5 mm leg; datum checks follow `LABEL_DROP`.
+  All 26 pass. New camera `CAM_Corner` (front-right chamfer close-up).
