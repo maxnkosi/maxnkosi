@@ -292,3 +292,59 @@ change is a Claude-run procedure, not automatic synchronisation.
 6. A new baseline is saved (`baseline_v002.json`) and the change is logged in Notion.
 Concept 1 is the exception: its Blender label is the rev D construction from page 01 § L built by
 `build_avante_master`, so a C01 artwork change is routed to that pipeline by hand.
+
+## Variants master v002 (3 Nov 2026) — the user's Figma edits and comments, plus 15 photography setups
+
+`avante_variants_master_v002.blend` (v001 and v009 untouched: MD5 c1dffef2… and d5899c04… unchanged).
+
+    blender -b avante_master_v009.blend --python build_variants_master_v002.py -- --save avante_variants_master_v002.blend
+    blender -b avante_variants_master_v002.blend --python rebuild_photography_v002.py     # rigs only, after recipe edits
+
+**Source of truth** — the editable components on review pages 04–08 (Figma checkpoint version 2417687811270157536).
+`figma_review/make_manifests_v002.py` writes `textures/variants_src_v002/<cid>/manifest.json` from the review
+copies; only layers whose pixels changed were re-exported (C06 6, C07 5, C10 1 + the new monogram 57:262), the rest
+reuse the v001 exports at their new positions. Text exports are glyph crops, so text is placed by its render
+bounds (this removes a ≈1.2 mm upward offset that all variant text had in v001).
+
+**Registration frozen at v001** (`variants_concepts_v002.FIT_V001`): each concept keeps its v001 mm-per-unit and
+label-bottom anchor, so every edit moves on the bottle exactly as far as it moved in Figma; nothing is refitted
+or stretched. Changes applied:
+- C05: glass print 4.7 mm lower; domed emboss on AVANTE and the panel monogram (comments).
+- C06: wrap narrowed to the drawn edges (arc ±41 mm, now stops at the front-face edges) and shortened; medallion
+  Ø 31.7 mm, domed disc; AVANTE and story print 83.5 % and lower; type 82.5 %.
+- C07: label shortened (bottom 13.0 mm higher); coin Ø 36.4 mm, lower, **solid metal 0.60 mm** (comment "yes solid
+  metal, 2x extrusion"); domed AVANTE.
+- C10: label shortened, ground #F7F2EC, navy wrap band and pinlines removed, new gold monogram (FOIL-01 flat,
+  finish REVIEW); medallion Ø 35.7 mm, domed disc.
+- C01: v009 objects; domed AVANTE (spearman keeps the flat die) and domed film roundel (0.45 mm + stamped foil).
+- Domed emboss (EMB-02, P): distance-based quarter-circle crest, 0.25 mm; medallion discs domed 0.45 mm under it.
+  Height maps are normalised; displacement Scale = map maximum.
+
+**QA** — `check_variants_master.py`: 48/49, the single failure is "one file, one scene", expected now that the 15
+photography scenes exist. Concept 1 signature equals v001 except the roundel material (the requested dome).
+
+**Photography** (`photography_v002.py`, `render_photography.py`, `photography/REFERENCE_BREAKDOWN.md`): one scene
+per placement, `PHOTO_<cid>_<ref>`, linking that concept's assembly (never copied) and its own rig collection
+under `PHOTOGRAPHY/PHOTO_<cid>/` (excluded from the main scene's view layer, so the shared studio and its renders
+are unchanged). 15 placements, 7 distinct reference images; light levels calibrated to the v009 studio (key
+10.5 W). Passes: A composition (25 %, 24 spp), B light/material (40 %, 48 spp), C QC sheets
+(`photography/compare_sheet.py`, reference | render), FINAL.
+
+    blender -b avante_variants_master_v002.blend --python render_photography.py -- FINAL all 100 384
+
+**FINAL photography (3 Nov)** — all 15 rendered at 100 %, 256 spp to `renders/photography/FINAL/`; v002 lineups
+at 50 % to `renders/v002_diag/variants_v002_lineup_*.png`. Placed in Figma under each concept's
+"Photgraphy references" section (section "Photography v002 — FINAL"), page 09 lineup slots updated.
+
+**Lighting refinement (4 Nov, user-approved)** — the C07/C10 cream (#F7F2EC, ≈0.93 linear) rendered grey because
+the paper got far less light than the glass highlights and AgX tone-mapped it to mid-grey. Lighting-only fix,
+artwork and materials untouched:
+- `photography_v002.py` `LABEL_FILL`: soft frontal area light per setup, light-linked to the concept's front-label
+  object only (C07 55, C10 100 W-units; C05 R24 50). C05 R24 also gets a warm back-glow card (backlit liquid) and
+  fill 4→6.
+- `studio_labelfill_v002.py`: the same idea in the shared studio (`STUDIO_LABEL_FILL`, C07 12 W, C10 45 W) for the
+  lineups and single-bottle renders.
+- Re-rendered: C05 R24, C07 ×3, C10 ×3, both lineups, C07/C10 hero + three-quarter diagnostics. Pre-refine copies
+  in `renders/photography/FINAL_pre_labelfill/` and `renders/v002_diag/pre_labelfill/`.
+
+The C01 domed height map is written as a lossless ZIP float EXR (≈2 MB rather than ≈470 MB uncompressed).

@@ -10,3 +10,8 @@ avante/blender/research/v006_study/diag/*.png
 avante/blender/research/v006_study/diag/*.npy
 avante/blender/research/v006_study/diag/*.exr
 avante/blender/research/v006_study/diag/*.blend
+# v002 variants: quick test renders and render-queue logs stay local; comparison sheets (contain reference photos) live outside the repo
+avante/blender/renders/photography/TEST/
+avante/blender/renders/v002_diag/TEST_*.png
+avante/blender/renders/v002_diag/timing_*.png
+avante/blender/renders/*.log
